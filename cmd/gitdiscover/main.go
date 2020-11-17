@@ -33,7 +33,7 @@ func main() {
 			fmt.Printf("%v : Not a git directory! err=%v\n", p, err)
 		} else {
 			gs := getGitStatus(p)
-			fmt.Printf("%v : %s\n", p,gs)
+			fmt.Printf("%v : %s", p,gs)
 		}
 	}
 
