@@ -2,51 +2,78 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
+	"sort"
+	"strconv"
+	"time"
 )
 
+type GitStatus struct {
+	Status string
+	Date   *time.Time
+}
+
 func main() {
-	if len(os.Args)>1 {
-		for i := 1; i < len(os.Args); i++ {
-			arg := os.Args[i]
-
-			switch arg {
-			case "search":
-				fmt.Printf("Search path : %v\n", os.Args[i+1])
-				i++
-			default:
-				unknownCommand(arg)
-				os.Exit(1) // Unknown command
-			}
-			i++
-		}
-	}
-
+	// Load config
 	config := NewConfig()
-	config.Load()
-
-	for _, p := range config.Paths {
-		gitPath := path.Join(p, ".git")
-		if _, err := os.Stat(gitPath); os.IsNotExist(err) {
-			fmt.Printf("%v : Not a git directory! err=%v\n", p, err)
-		} else {
-			gs := getGitStatus(p)
-			fmt.Printf("%v : %s", p,gs)
-		}
+	err:=config.Load()
+	if err!=nil {
+		fmt.Println("Failed to load config file (~/.config/gitdiscovery/config.json).")
+		os.Exit(1) // Failed to load config file
 	}
 
+	// Get the git statuses of the paths in the config
+	var gitStatuses []GitStatus
+	for _, basePath := range config.Paths {
+		gitPath := path.Join(basePath, ".git")
+		status := GitStatus{}
+
+		if _, err := os.Stat(gitPath); os.IsNotExist(err) {
+			status.Date = nil
+			status.Status = fmt.Sprintf(createErrorFormatString(config), basePath, err)
+		} else {
+			gs := getGitStatus(basePath)
+			status.Date = getDirectoryModifiedDate(basePath)
+			status.Status = fmt.Sprintf(createFormatString(config), basePath, gs)
+		}
+
+		gitStatuses = append(gitStatuses, status)
+	}
+
+	// Sort the git status string after modified date of the .git folder
+	sort.Slice(gitStatuses, func(i, j int) bool {
+		date1 := gitStatuses[i].Date
+		date2 := gitStatuses[j].Date
+		if date1 == nil || date2 == nil {
+			return false
+		}
+		return (*date1).After(*date2)
+	})
+
+	// Print out the git statuses
+	for _, status := range gitStatuses {
+		fmt.Printf("%v - %v", status.Date.Format(config.DateFormat), status.Status)
+	}
+
+	// Exit
 	os.Exit(0)
 }
 
-func unknownCommand(arg string) {
-	fmt.Printf("Unknown command : %v\n", arg)
-	fmt.Println()
-	fmt.Println("Usage:")
-	fmt.Println("\tgitdiscover search [path]")
+// Create format string for successful git status
+func createFormatString(config *Config) string {
+	return "%-" + strconv.Itoa(config.PathColumnWidth) + "s : %s"
 }
 
+// Create format string for failed git statuses
+func createErrorFormatString(config *Config) string {
+	return "%-" + strconv.Itoa(config.PathColumnWidth) + "s : Not a git directory! err=%v"
+}
+
+// Get the git status
 func getGitStatus(path string) string {
 	cmd := exec.Command("/home/per/bin/gitprompt-go")
 	cmd.Dir = path
@@ -55,4 +82,42 @@ func getGitStatus(path string) string {
 		return "failed to check git status"
 	}
 	return string(out)
+}
+
+func getDirectoryModifiedDate(directory string) *time.Time {
+	var files []string
+
+	e := filepath.Walk(directory, func(path string, info os.FileInfo, err error) error {
+		if err!=nil {
+			return nil
+		}
+		if info.IsDir() && (info.Name() == ".git" || info.Name() == ".idea") {
+			return filepath.SkipDir
+		}
+		files = append(files, info.Name())
+		return nil
+	})
+	if e != nil {
+		log.Fatal(e)
+	}
+
+	var date *time.Time
+
+	for _, fileName := range files {
+		modDate := getModifiedDate(path.Join(directory,fileName))
+		if date == nil || (modDate!=nil && modDate.After(*date)) {
+			date = modDate
+		}
+	}
+	return date
+}
+
+// Get the modified date of the .git folder
+func getModifiedDate(path string) *time.Time {
+	info, err := os.Stat(path)
+	if err != nil {
+		return nil
+	}
+	date := info.ModTime()
+	return &date
 }

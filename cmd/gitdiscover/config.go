@@ -1,15 +1,17 @@
 package main
 
 import (
-"encoding/json"
-"fmt"
-"os"
-"os/user"
-"path"
+	"encoding/json"
+	"fmt"
+	"os"
+	"os/user"
+	"path"
 )
 
 type Config struct {
-	Paths []string `json:"paths"`
+	Paths           []string `json:"paths"`
+	DateFormat      string   `json:"date-format"`
+	PathColumnWidth int      `json:"path-column-width"`
 }
 
 func NewConfig() *Config {
@@ -25,7 +27,7 @@ func (config *Config) ConfigExists() bool {
 }
 
 // Load : Loads the configuration file
-func (config *Config) Load() error {
+func (config *Config) Load() (err error) {
 	// Get the path to the config file
 	configPath := getConfigPath()
 
@@ -35,16 +37,22 @@ func (config *Config) Load() error {
 	// Handle errors
 	if err != nil {
 		fmt.Println(err.Error())
+		return err
 	}
-	defer configFile.Close()
+
+	defer func() {
+		err = configFile.Close()
+	}()
 
 	// Parse the JSON document
 	jsonParser := json.NewDecoder(configFile)
-	jsonParser.Decode(&config)
+	err = jsonParser.Decode(&config)
+	if err!=nil {
+		return err
+	}
 
 	return nil
 }
-
 
 // Get path to the config file
 func getConfigPath() string {
@@ -62,4 +70,3 @@ func getHomeDirectory() string {
 	}
 	return u.HomeDir
 }
-
