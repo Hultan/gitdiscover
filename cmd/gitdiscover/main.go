@@ -84,17 +84,23 @@ func getGitStatus(path string) string {
 	return string(out)
 }
 
+// Get the last modified date of any file in directory...
 func getDirectoryModifiedDate(directory string) *time.Time {
 	var files []string
 
 	e := filepath.Walk(directory, func(path string, info os.FileInfo, err error) error {
+		// On errors, move on...
 		if err!=nil {
 			return nil
 		}
+		// Skip .git and .idea directories
 		if info.IsDir() && (info.Name() == ".git" || info.Name() == ".idea") {
 			return filepath.SkipDir
 		}
-		files = append(files, info.Name())
+		// Add all files to slice...
+		if !info.IsDir() {
+			files = append(files, info.Name())
+		}
 		return nil
 	})
 	if e != nil {
@@ -102,7 +108,6 @@ func getDirectoryModifiedDate(directory string) *time.Time {
 	}
 
 	var date *time.Time
-
 	for _, fileName := range files {
 		modDate := getModifiedDate(path.Join(directory,fileName))
 		if date == nil || (modDate!=nil && modDate.After(*date)) {
@@ -112,7 +117,7 @@ func getDirectoryModifiedDate(directory string) *time.Time {
 	return date
 }
 
-// Get the modified date of the .git folder
+// Get the modified date of a file
 func getModifiedDate(path string) *time.Time {
 	info, err := os.Stat(path)
 	if err != nil {
