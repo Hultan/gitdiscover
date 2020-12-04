@@ -58,7 +58,7 @@ func (config *Config) Load() (err error) {
 func getConfigPath() string {
 	home := getHomeDirectory()
 
-	return path.Join(home, ".config/gitdiscover/config.json")
+	return path.Join(home, ".config/softteam/gitdiscover/config.json")
 }
 
 // Get current users home directory
