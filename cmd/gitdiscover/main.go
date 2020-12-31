@@ -2,11 +2,9 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"path"
-	"path/filepath"
 	"sort"
 	"strconv"
 	"time"
@@ -52,7 +50,7 @@ func main() {
 			status.Status = fmt.Sprintf(createErrorFormatString(config), basePath, err)
 		} else {
 			gs := getGitStatus(basePath)
-			status.Date = getDirectoryModifiedDate(basePath)
+			status.Date = getModifiedDate(basePath)
 			status.Status = fmt.Sprintf(createFormatString(config), basePath, gs)
 		}
 
@@ -127,39 +125,41 @@ func getGitStatus(path string) string {
 	}
 	return string(out)
 }
-
-// Get the last modified date of any file in directory...
-func getDirectoryModifiedDate(directory string) *time.Time {
-	var files []string
-
-	e := filepath.Walk(directory, func(path string, info os.FileInfo, err error) error {
-		// On errors, move on...
-		if err!=nil {
-			return nil
-		}
-		// Skip .git and .idea directories
-		if info.IsDir() && (info.Name() == ".git" || info.Name() == ".idea") {
-			return filepath.SkipDir
-		}
-		// Add all files to slice...
-		if !info.IsDir() {
-			files = append(files, info.Name())
-		}
-		return nil
-	})
-	if e != nil {
-		log.Fatal(e)
-	}
-
-	var date *time.Time
-	for _, fileName := range files {
-		modDate := getModifiedDate(path.Join(directory,fileName))
-		if date == nil || (modDate!=nil && modDate.After(*date)) {
-			date = modDate
-		}
-	}
-	return date
-}
+//
+//// Get the last modified date of any file in directory...
+//func getDirectoryModifiedDate(directory string) *time.Time {
+//	return getModifiedDate(directory)
+//
+//	var files []string
+//
+//	e := filepath.Walk(directory, func(path string, info os.FileInfo, err error) error {
+//		// On errors, move on...
+//		if err!=nil {
+//			return nil
+//		}
+//		// Skip .git and .idea directories
+//		if info.IsDir() && (info.Name() == ".git" || info.Name() == ".idea") {
+//			return filepath.SkipDir
+//		}
+//		// Add all files to slice...
+//		if !info.IsDir() {
+//			files = append(files, info.Name())
+//		}
+//		return nil
+//	})
+//	if e != nil {
+//		log.Fatal(e)
+//	}
+//
+//	var date *time.Time
+//	for _, fileName := range files {
+//		modDate := getModifiedDate(path.Join(directory,fileName))
+//		if date == nil || (modDate!=nil && modDate.After(*date)) {
+//			date = modDate
+//		}
+//	}
+//	return date
+//}
 
 // Get the modified date of a file
 func getModifiedDate(path string) *time.Time {
