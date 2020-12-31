@@ -12,18 +12,32 @@ import (
 	"time"
 )
 
+const (
+	exitNormal = 0
+	exitConfigError = 1
+)
+
+const (
+	applicationVersion = "2.0"
+)
+
 type GitStatus struct {
 	Status string
 	Date   *time.Time
 }
 
+var config *Config
+
 func main() {
+	// Check command line arguments
+	handled := checkArguments()
+	if handled {
+		os.Exit(exitNormal)
+	}
+
 	// Load config
-	config := NewConfig()
-	err:=config.Load()
-	if err!=nil {
-		fmt.Println("Failed to load config file (~/.config/gitdiscovery/config.json).")
-		os.Exit(1) // Failed to load config file
+	if tryLoadConfig() == false {
+		os.Exit(exitConfigError) // Failed to load config file
 	}
 
 	// Get the git statuses of the paths in the config
@@ -60,7 +74,30 @@ func main() {
 	}
 
 	// Exit
-	os.Exit(0)
+	os.Exit(exitNormal)
+}
+
+func checkArguments() bool {
+	if os.Args[1] == "--version" {
+		fmt.Printf("Gitdiscover %s\n", applicationVersion)
+		return true
+	} else if os.Args[1] == "--help" {
+		fmt.Println("Usage : gitdiscover [--version] [--help] [add-path path]")
+		return true
+	} else if os.Args[1] == "add-path" && len(os.Args) == 3 {
+		config = NewConfig()
+		err:=config.Load()
+		if err!=nil {
+			fmt.Println(err)
+			os.Exit(exitConfigError)
+		}
+		config.Paths = append(config.Paths, os.Args[2])
+		config.Save()
+		fmt.Printf("The path '%s' has been added to the gitdiscover config!", os.Args[2])
+		return true
+	}
+
+	return false
 }
 
 // Create format string for successful git status
@@ -125,4 +162,29 @@ func getModifiedDate(path string) *time.Time {
 	}
 	date := info.ModTime()
 	return &date
+}
+
+func tryLoadConfig() bool {
+	// Load config
+	config = NewConfig()
+	if config.ConfigExists() {
+		err := config.Load()
+		if err != nil {
+			fmt.Println("Failed to load config file (~/.config/softteam/gitdiscovery/config.json).")
+			fmt.Println(err)
+			return false
+		}
+	} else {
+		fmt.Println("Missing config file (~/.config/softteam/gitdiscovery/config.json)!")
+		fmt.Print("Creating a new empty one...")
+		err := config.CreateEmptyConfig()
+		if err!=nil {
+			fmt.Println("failed!")
+			fmt.Println(err)
+			return false
+		}
+		fmt.Println("done!")
+	}
+
+	return true
 }
