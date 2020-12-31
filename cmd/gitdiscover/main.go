@@ -15,6 +15,7 @@ import (
 const (
 	exitNormal = 0
 	exitConfigError = 1
+	exitArgumentError = 2
 )
 
 const (
@@ -78,6 +79,10 @@ func main() {
 }
 
 func checkArguments() bool {
+	if len(os.Args) == 1 {
+		return false
+	}
+
 	if os.Args[1] == "--version" {
 		fmt.Printf("Gitdiscover %s\n", applicationVersion)
 		return true
@@ -97,6 +102,8 @@ func checkArguments() bool {
 		return true
 	}
 
+	fmt.Println("Invalid argument!")
+	os.Exit(exitArgumentError)
 	return false
 }
 
