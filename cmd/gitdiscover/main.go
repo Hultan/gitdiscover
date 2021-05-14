@@ -17,7 +17,7 @@ const (
 )
 
 const (
-	applicationVersion = "2.0"
+	applicationVersion = "2.1"
 )
 
 type GitStatus struct {
@@ -47,7 +47,7 @@ func main() {
 
 		if _, err := os.Stat(gitPath); os.IsNotExist(err) {
 			status.Date = nil
-			status.Status = fmt.Sprintf(createErrorFormatString(config), basePath, err)
+			status.Status = fmt.Sprintf(createErrorFormatString(config), basePath)
 		} else {
 			gs := getGitStatus(basePath)
 			status.Date = getModifiedDate(basePath)
@@ -69,7 +69,11 @@ func main() {
 
 	// Print out the git statuses
 	for _, status := range gitStatuses {
-		fmt.Printf("%v - %v", status.Date.Format(config.DateFormat), status.Status)
+		if status.Date == nil {
+			fmt.Printf("%v - %v\n", "2006-01-02, kl. 15:04", status.Status)
+		} else {
+			fmt.Printf("%v - %v", status.Date.Format(config.DateFormat), status.Status)
+		}
 	}
 
 	// Exit
@@ -112,7 +116,7 @@ func createFormatString(config *Config) string {
 
 // Create format string for failed git statuses
 func createErrorFormatString(config *Config) string {
-	return "%-" + strconv.Itoa(config.PathColumnWidth) + "s : Not a git directory! err=%v"
+	return "%-" + strconv.Itoa(config.PathColumnWidth) + "s : Not a git directory!"
 }
 
 // Get the git status
