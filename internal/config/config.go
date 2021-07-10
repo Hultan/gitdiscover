@@ -1,4 +1,4 @@
-package main
+package config
 
 import (
 	"encoding/json"
@@ -8,13 +8,6 @@ import (
 	"path"
 )
 
-const emptyConfig = `{
-  "paths": [
-  ],
-  "date-format": "2006-01-02, kl. 15:04",
-  "path-column-width":40
-}`
-
 type Config struct {
 	Paths           []string `json:"paths"`
 	DateFormat      string   `json:"date-format"`
@@ -23,31 +16,6 @@ type Config struct {
 
 func NewConfig() *Config {
 	return new(Config)
-}
-
-func (config *Config) ConfigExists() bool {
-	// Get the path to the config file
-	configPath := config.GetConfigPath()
-
-	_, err := os.Stat(configPath)
-	return !os.IsNotExist(err)
-}
-
-func (config *Config) CreateEmptyConfig() error {
-	f, err := os.Create(config.GetConfigPath())
-	if err != nil {
-		return err
-	}
-	_, err = f.WriteString(emptyConfig)
-	if err != nil {
-		_ = f.Close()
-		return err
-	}
-	err = f.Close()
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 // Load : Loads the configuration file
@@ -108,11 +76,11 @@ func (config *Config) Save() {
 	_ = configFile.Close()
 }
 
-// Get path to the config file
+// GetConfigPath : Get path to the config file
 func (config *Config) GetConfigPath() string {
 	home := config.getHomeDirectory()
 
-	return path.Join(home, ".config/softteam/gitdiscover/config.json")
+	return path.Join(home, defaultConfigPath)
 }
 
 // Get current users home directory
@@ -123,4 +91,32 @@ func (config *Config) getHomeDirectory() string {
 		panic(errorMessage)
 	}
 	return u.HomeDir
+}
+
+func (config *Config) ConfigExists() bool {
+	configPath := config.GetConfigPath()
+	if _, err := os.Stat(configPath); err == nil {
+		return true
+	} else if os.IsNotExist(err) {
+		return false
+	} else {
+		return false
+	}
+}
+
+func (config *Config) CreateEmptyConfig() error {
+	f, err := os.Create(config.GetConfigPath())
+	if err != nil {
+		return err
+	}
+	_, err = f.WriteString(emptyConfig)
+	if err != nil {
+		_ = f.Close()
+		return err
+	}
+	err = f.Close()
+	if err != nil {
+		return err
+	}
+	return nil
 }
