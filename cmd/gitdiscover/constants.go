@@ -9,7 +9,7 @@ const (
 )
 
 const (
-	applicationVersion = "3.0"
+	applicationVersion = "3.2"
 	ApplicationId    = "se.softteam.gitdiscover"
 	ApplicationFlags = glib.APPLICATION_FLAGS_NONE
 	applicationTitle = "SoftImdb"

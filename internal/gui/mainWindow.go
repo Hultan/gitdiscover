@@ -95,11 +95,13 @@ func (m *MainWindow) setupToolBar() {
 	button = m.builder.getObject("toolbarOpenConfigButton").(*gtk.ToolButton)
 	_ = button.Connect("clicked", m.openConfigButtonClicked)
 
-	// Terminal/Nemo button
+	// Terminal/Nemo/GoLand buttons
 	button = m.builder.getObject("toolbarTerminal").(*gtk.ToolButton)
 	_ = button.Connect("clicked", m.openInTerminalButtonClicked)
 	button = m.builder.getObject("toolbarNemo").(*gtk.ToolButton)
 	_ = button.Connect("clicked", m.openInNemoButtonClicked)
+	button = m.builder.getObject("toolbarGoland").(*gtk.ToolButton)
+	_ = button.Connect("clicked", m.openInGolandButtonClicked)
 }
 
 func (m *MainWindow) addButtonClicked() {
@@ -238,12 +240,16 @@ func (m *MainWindow) createListBoxItem(index int, dateFormat string, repo gitdis
 	return box, nil
 }
 
+func (m *MainWindow) openInTerminal(path string) {
+	m.executeCommand("gnome-terminal", "--working-directory="+path)
+}
+
 func (m *MainWindow) openInNemo(path string) {
 	m.executeCommand("nemo", path)
 }
 
-func (m *MainWindow) openInTerminal(path string) {
-	m.executeCommand("gnome-terminal", "--working-directory="+path)
+func (m *MainWindow) openInGoland(path string) {
+	m.executeCommand("goland", path)
 }
 
 func (m *MainWindow) executeCommand(command, path string) {
@@ -262,37 +268,6 @@ func (m *MainWindow) executeCommand(command, path string) {
 	fmt.Println(out.String())
 }
 
-//func (m *MainWindow) listDoubleClicked() {
-//	row := m.repositoryListBox.GetSelectedRow()
-//	if row == nil {
-//		return
-//	}
-//
-//	widget, err := row.GetChild()
-//	if err != nil {
-//		return
-//	}
-//
-//	box, ok := widget.(*gtk.Box)
-//	if !ok {
-//		return
-//	}
-//
-//	name, err := box.GetName()
-//	if err != nil {
-//		return
-//	}
-//
-//	index, err := strconv.Atoi(name[4:])
-//	repo := m.repositories[index]
-//
-//	if m.terminalOrNemo.GetActive() {
-//		m.openInTerminal(strings.Trim(repo.Path," "))
-//	} else {
-//		m.openInNemo(strings.Trim(repo.Path, " "))
-//	}
-//}
-
 func (m *MainWindow) openConfigButtonClicked() {
 	m.executeCommand("xed","/home/per/.config/softteam/gitdiscover/config.json")
 }
@@ -305,6 +280,11 @@ func (m *MainWindow) openInTerminalButtonClicked() {
 func (m *MainWindow) openInNemoButtonClicked() {
 	repo := m.getSelectedRepo()
 	m.openInNemo(repo.Path)
+}
+
+func (m *MainWindow) openInGolandButtonClicked() {
+	repo := m.getSelectedRepo()
+	m.openInGoland(repo.Path)
 }
 
 func (m *MainWindow) getSelectedRepo() gitdiscover.RepositoryStatus {
