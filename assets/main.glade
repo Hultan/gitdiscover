@@ -277,12 +277,25 @@
               </packing>
             </child>
             <child>
-              <object class="GtkToggleToolButton" id="toolbarTerminal">
+              <object class="GtkToolButton" id="toolbarTerminal">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="label" translatable="yes">Terminal</property>
                 <property name="use_underline">True</property>
-                <property name="active">True</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkToolButton" id="toolbarNemo">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="is_important">True</property>
+                <property name="action_name">important</property>
+                <property name="label" translatable="yes">Nemo</property>
+                <property name="use_underline">True</property>
               </object>
               <packing>
                 <property name="expand">False</property>

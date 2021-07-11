@@ -9,7 +9,6 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"strconv"
 	"strings"
 )
 
@@ -57,9 +56,6 @@ func (m *MainWindow) OpenMainWindow(app *gtk.Application) {
 
 	// Repository list box
 	m.repositoryListBox = m.builder.getObject("repositoryListBox").(*gtk.ListBox)
-	m.repositoryListBox.Connect("row-activated", func() {
-		m.listDoubleClicked()
-	})
 
 	// Refresh repository list
 	m.refreshList()
@@ -85,11 +81,11 @@ func (m *MainWindow) setupToolBar() {
 
 	// Add button
 	button = m.builder.getObject("toolbarAddButton").(*gtk.ToolButton)
-	_ = button.Connect("clicked", m.openAddButtonClicked)
+	_ = button.Connect("clicked", m.addButtonClicked)
 
 	// Remove button
 	button = m.builder.getObject("toolbarRemoveButton").(*gtk.ToolButton)
-	_ = button.Connect("clicked", m.openRemoveButtonClicked)
+	_ = button.Connect("clicked", m.removeButtonClicked)
 
 	// Refresh button
 	button = m.builder.getObject("toolbarRefreshButton").(*gtk.ToolButton)
@@ -100,22 +96,54 @@ func (m *MainWindow) setupToolBar() {
 	_ = button.Connect("clicked", m.openConfigButtonClicked)
 
 	// Terminal/Nemo button
-	m.terminalOrNemo = m.builder.getObject("toolbarTerminal").(*gtk.ToggleToolButton)
-	m.terminalOrNemo.Connect("toggled", func(button *gtk.ToggleToolButton) {
-		if button.GetActive() {
-			button.SetLabel("Terminal")
-		} else{
-			button.SetLabel("Nemo")
+	button = m.builder.getObject("toolbarTerminal").(*gtk.ToolButton)
+	_ = button.Connect("clicked", m.openInTerminalButtonClicked)
+	button = m.builder.getObject("toolbarNemo").(*gtk.ToolButton)
+	_ = button.Connect("clicked", m.openInNemoButtonClicked)
+}
+
+func (m *MainWindow) addButtonClicked() {
+	dialog, err := gtk.FileChooserDialogNewWith2Buttons("Select path...",
+		nil,
+		gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER,
+		"OK",
+		gtk.RESPONSE_OK,
+		"Cancel",
+		gtk.RESPONSE_CANCEL)
+	if err != nil {
+		panic(err)
+	}
+	dialog.SetModal(true)
+	response := dialog.Run()
+	if response == gtk.RESPONSE_CANCEL {
+		dialog.Destroy()
+		return
+	}
+
+	config := gitConfig.NewConfig()
+	config.Load()
+	config.Paths = append(config.Paths, dialog.GetFilename())
+	config.Save()
+	fmt.Println("Added path : ", dialog.GetFilename())
+	dialog.Destroy()
+	m.refreshList()
+}
+
+func (m *MainWindow) removeButtonClicked() {
+	repo := m.getSelectedRepo()
+	path := strings.Trim(repo.Path, " ")
+
+	config := gitConfig.NewConfig()
+	config.Load()
+	for i, v := range config.Paths {
+		if v == path {
+			config.Paths = append(config.Paths[:i], config.Paths[i+1:]...)
+			break
 		}
-	})
-}
-
-func (m *MainWindow) openAddButtonClicked() {
-
-}
-
-func (m *MainWindow) openRemoveButtonClicked() {
-
+	}
+	config.Save()
+	fmt.Println("Removed path : ", path)
+	m.refreshList()
 }
 
 func (m *MainWindow) refreshButtonClicked() {
@@ -176,7 +204,12 @@ func (m *MainWindow) createListBoxItem(index int, dateFormat string, repo gitdis
 	if err != nil {
 		return nil, err
 	}
-	text := `<span font="Sans Regular 10" foreground="#DD4444">` + repo.Date.Format(dateFormat) + `</span>`
+	var text = ""
+	if repo.Date == nil {
+		text = `<span font="Sans Regular 10" foreground="#DD4444">No date!                    </span>`
+	} else {
+		text = `<span font="Sans Regular 10" foreground="#DD4444">` + repo.Date.Format(dateFormat) + `</span>`
+	}
 	label.SetMarkup(text)
 	label.SetName("lblDate")
 	label.SetHAlign(gtk.ALIGN_START)
@@ -229,37 +262,56 @@ func (m *MainWindow) executeCommand(command, path string) {
 	fmt.Println(out.String())
 }
 
-func (m *MainWindow) listDoubleClicked() {
-	row := m.repositoryListBox.GetSelectedRow()
-	if row == nil {
-		return
-	}
-
-	widget, err := row.GetChild()
-	if err != nil {
-		return
-	}
-
-	box, ok := widget.(*gtk.Box)
-	if !ok {
-		return
-	}
-
-	name, err := box.GetName()
-	if err != nil {
-		return
-	}
-
-	index, err := strconv.Atoi(name[4:])
-	repo := m.repositories[index]
-
-	if m.terminalOrNemo.GetActive() {
-		m.openInTerminal(strings.Trim(repo.Path," "))
-	} else {
-		m.openInNemo(strings.Trim(repo.Path, " "))
-	}
-}
+//func (m *MainWindow) listDoubleClicked() {
+//	row := m.repositoryListBox.GetSelectedRow()
+//	if row == nil {
+//		return
+//	}
+//
+//	widget, err := row.GetChild()
+//	if err != nil {
+//		return
+//	}
+//
+//	box, ok := widget.(*gtk.Box)
+//	if !ok {
+//		return
+//	}
+//
+//	name, err := box.GetName()
+//	if err != nil {
+//		return
+//	}
+//
+//	index, err := strconv.Atoi(name[4:])
+//	repo := m.repositories[index]
+//
+//	if m.terminalOrNemo.GetActive() {
+//		m.openInTerminal(strings.Trim(repo.Path," "))
+//	} else {
+//		m.openInNemo(strings.Trim(repo.Path, " "))
+//	}
+//}
 
 func (m *MainWindow) openConfigButtonClicked() {
 	m.executeCommand("xed","/home/per/.config/softteam/gitdiscover/config.json")
+}
+
+func (m *MainWindow) openInTerminalButtonClicked() {
+	repo := m.getSelectedRepo()
+	m.openInTerminal(repo.Path)
+}
+
+func (m *MainWindow) openInNemoButtonClicked() {
+	repo := m.getSelectedRepo()
+	m.openInNemo(repo.Path)
+}
+
+func (m *MainWindow) getSelectedRepo() gitdiscover.RepositoryStatus {
+	row := m.repositoryListBox.GetSelectedRow()
+	index := row.GetIndex()
+	repo := m.repositories[index]
+	repo.Path = strings.Trim(repo.Path, " ")
+
+	return repo
 }

@@ -36,7 +36,7 @@ func (g *Git) GetRepositories() ([]RepositoryStatus, error) {
 
 		if _, err := os.Stat(gitPath); os.IsNotExist(err) {
 			status.Date = nil
-			status.Status = fmt.Sprintf(g.createErrorFormatString(), basePath)
+			status.Status = "Not a git directory!"
 		} else {
 			gs := g.getGitStatus(basePath)
 			status.Date = g.getModifiedDate(basePath)
@@ -75,7 +75,3 @@ func (g *Git) createPathFormatString() string {
 	return "%-" + strconv.Itoa(g.Config.PathColumnWidth) + "s"
 }
 
-// Create format string for failed git statuses
-func (g *Git) createErrorFormatString() string {
-	return "%-" + strconv.Itoa(g.Config.PathColumnWidth) + "s : Not a git directory!"
-}
