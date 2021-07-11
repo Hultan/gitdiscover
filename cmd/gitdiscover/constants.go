@@ -9,9 +9,7 @@ const (
 )
 
 const (
-	applicationVersion = "3.2"
+	applicationVersion = "3.2" // IMPORTANT : Change in gui/constants.go as well
 	ApplicationId    = "se.softteam.gitdiscover"
 	ApplicationFlags = glib.APPLICATION_FLAGS_NONE
-	applicationTitle = "SoftImdb"
-	applicationCopyRight = "©SoftTeam AB, 2020"
 )
