@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -31,7 +32,7 @@ func (g *Git) GetRepositories() ([]RepositoryStatus, error) {
 	var gitStatuses []RepositoryStatus
 	for _, basePath := range g.Config.Paths {
 		gitPath := path.Join(basePath, ".git")
-		status := RepositoryStatus{Path: basePath}
+		status := RepositoryStatus{Path: fmt.Sprintf(g.createPathFormatString(),basePath)}
 
 		if _, err := os.Stat(gitPath); os.IsNotExist(err) {
 			status.Date = nil
@@ -39,7 +40,7 @@ func (g *Git) GetRepositories() ([]RepositoryStatus, error) {
 		} else {
 			gs := g.getGitStatus(basePath)
 			status.Date = g.getModifiedDate(basePath)
-			status.Status = fmt.Sprintf(g.createFormatString(), basePath, gs)
+			status.Status = strings.Replace(gs,"\n","",-1)
 		}
 
 		gitStatuses = append(gitStatuses, status)
@@ -69,9 +70,9 @@ func (g *Git) getModifiedDate(path string) *time.Time {
 	return &date
 }
 
-// Create format string for successful git status
-func (g *Git) createFormatString() string {
-	return "%-" + strconv.Itoa(g.Config.PathColumnWidth) + "s : %s"
+// Create format string for failed git statuses
+func (g *Git) createPathFormatString() string {
+	return "%-" + strconv.Itoa(g.Config.PathColumnWidth) + "s"
 }
 
 // Create format string for failed git statuses

@@ -3,13 +3,22 @@ package main
 import (
 	"errors"
 	"fmt"
+	"github.com/gotk3/gotk3/gtk"
 	"github.com/hultan/gitdiscover/internal/config"
 	"github.com/hultan/gitdiscover/internal/gitdiscover"
+	"github.com/hultan/gitdiscover/internal/gui"
 	"os"
 	"sort"
 )
 
 func main() {
+	gui := isGuiRequested()
+	if gui {
+		fmt.Printf("Gitdiscover : Starting GUI!\n")
+		showGUI()
+		return
+	}
+
 	// Check command line arguments
 	handled := checkArguments()
 	if handled {
@@ -39,12 +48,16 @@ func main() {
 	})
 
 	// Print out the git statuses
+	fmt.Println("Git Repository Statuses")
+	fmt.Println("_______________________")
 	for _, status := range gitStatuses {
+		var text = ""
 		if status.Date == nil {
-			fmt.Printf("%v - %v\n", "2006-01-02, kl. 15:04", status.Status)
+			text = fmt.Sprintf("%v - %v - %v", "2006-01-02, kl. 15:04", status.Path, status.Status)
 		} else {
-			fmt.Printf("%v - %v", status.Date.Format(config.DateFormat), status.Status)
+			text = fmt.Sprintf("%s - %s - %s", status.Date.Format(config.DateFormat), status.Path, status.Status)
 		}
+		fmt.Println(text)
 	}
 
 	// Exit
@@ -97,4 +110,31 @@ func loadConfig() (*config.Config, error) {
 	}
 
 	return config, nil
+}
+
+func isGuiRequested() bool {
+	if len(os.Args) == 1 {
+		return false
+	}
+
+	if os.Args[1] == "-gui" {
+		return true
+	}
+
+	return false
+}
+
+func showGUI() {
+	// Create a new application
+	application, err := gtk.ApplicationNew(ApplicationId, ApplicationFlags)
+	if err != nil {
+		panic(err)
+	}
+
+	mainForm := gui.NewMainWindow()
+	// Hook up the activate event handler
+	_ = application.Connect("activate", mainForm.OpenMainWindow)
+
+	// Start the application (and exit when it is done)
+	os.Exit(application.Run(nil))
 }
