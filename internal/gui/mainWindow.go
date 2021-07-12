@@ -3,12 +3,14 @@ package gui
 import (
 	"bytes"
 	"fmt"
+	"github.com/gotk3/gotk3/gdk"
 	"github.com/gotk3/gotk3/gtk"
 	gitConfig "github.com/hultan/gitdiscover/internal/config"
 	"github.com/hultan/gitdiscover/internal/gitdiscover"
 	"log"
 	"os"
 	"os/exec"
+	"path"
 	"strings"
 	"syscall"
 )
@@ -201,6 +203,24 @@ func (m *MainWindow) createListBoxItem(index int, dateFormat string, repo gitdis
 	if err != nil {
 		return nil, err
 	}
+
+	// Icon
+	assetsPath := path.Join(repo.Path, "assets")
+	iconPath := path.Join(assetsPath, "application.png")
+	if !fileExists(assetsPath) || !fileExists(iconPath) {
+		// General icon for project that don't have one
+		iconPath = "assets/code.png"
+	}
+	pix, err := gdk.PixbufNewFromFileAtSize(iconPath,16,16)
+	if err != nil {
+		return nil,err
+	}
+	image, err := gtk.ImageNewFromPixbuf(pix)
+	if err != nil {
+		return nil,err
+	}
+	box.PackStart(image, false, false, 10)
+
 
 	// Date
 	label, err := gtk.LabelNew("")

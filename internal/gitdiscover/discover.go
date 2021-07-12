@@ -1,7 +1,6 @@
 package gitdiscover
 
 import (
-	"fmt"
 	gitConfig "github.com/hultan/gitdiscover/internal/config"
 	"os"
 	"os/exec"
@@ -32,7 +31,7 @@ func (g *Git) GetRepositories() ([]RepositoryStatus, error) {
 	var gitStatuses []RepositoryStatus
 	for _, basePath := range g.Config.Paths {
 		gitPath := path.Join(basePath, ".git")
-		status := RepositoryStatus{Path: fmt.Sprintf(g.createPathFormatString(),basePath)}
+		status := RepositoryStatus{Path: basePath}
 
 		if _, err := os.Stat(gitPath); os.IsNotExist(err) {
 			status.Date = nil
