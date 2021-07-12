@@ -290,10 +290,11 @@ func (m *MainWindow) executeCommand(command, path string) {
 
 	// set the output to our variable
 	cmd.Stdout = &out
-	err := cmd.Run()
+	err := cmd.Start()
 	if err != nil {
 		log.Println(err)
 	}
+	cmd.Process.Release()
 
 	fmt.Println(out.String())
 }
