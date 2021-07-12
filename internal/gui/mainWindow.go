@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"syscall"
 )
 
 type MainWindow struct {
@@ -253,8 +254,14 @@ func (m *MainWindow) openInGoland(path string) {
 }
 
 func (m *MainWindow) executeCommand(command, path string) {
-	cmd := exec.Command(command, path)
 
+	cmd := exec.Command(command, path)
+	// Forces the new process to detach from the GitDiscover process
+	// so that it does not die when GitDiscover dies
+	cmd.SysProcAttr = &syscall.SysProcAttr{
+		Setpgid: true,
+	}
+	
 	// set var to get the output
 	var out bytes.Buffer
 
