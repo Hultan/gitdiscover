@@ -209,7 +209,10 @@ func (m *MainWindow) createListBoxItem(index int, dateFormat string, repo gitdis
 	iconPath := path.Join(assetsPath, "application.png")
 	if !fileExists(assetsPath) || !fileExists(iconPath) {
 		// General icon for project that don't have one
-		iconPath = "assets/code.png"
+		iconPath, err = getResourcePath("code.png")
+		if err != nil {
+			return nil, err
+		}
 	}
 	pix, err := gdk.PixbufNewFromFileAtSize(iconPath,16,16)
 	if err != nil {
