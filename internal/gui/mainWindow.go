@@ -7,7 +7,7 @@ import (
 	"github.com/gotk3/gotk3/gtk"
 	gitConfig "github.com/hultan/gitdiscover/internal/config"
 	"github.com/hultan/gitdiscover/internal/gitdiscover"
-	"log"
+	"github.com/sirupsen/logrus"
 	"os"
 	"os/exec"
 	"path"
@@ -16,6 +16,7 @@ import (
 )
 
 type MainWindow struct {
+	logger            *logrus.Logger
 	builder           *SoftBuilder
 	window            *gtk.ApplicationWindow
 	repositoryListBox *gtk.ListBox
@@ -26,6 +27,20 @@ type MainWindow struct {
 // NewMainWindow : Creates a new MainWindow object
 func NewMainWindow() *MainWindow {
 	mainWindow := new(MainWindow)
+	mainWindow.logger = logrus.New()
+	mainWindow.logger.Level = logrus.TraceLevel
+	mainWindow.logger.Out = os.Stdout
+
+	file, err := os.OpenFile("logrus.log", os.O_CREATE|os.O_WRONLY, 0666)
+	if err == nil {
+		mainWindow.logger.Out = file
+	} else {
+		mainWindow.logger.Info("Failed to log to file, using default stderr")
+	}
+	mainWindow.logger.Info("--------------------")
+	mainWindow.logger.Info("Starting GitDiscover")
+	mainWindow.logger.Info("--------------------")
+
 	return mainWindow
 }
 
@@ -68,6 +83,10 @@ func (m *MainWindow) OpenMainWindow(app *gtk.Application) {
 }
 
 func (m *MainWindow) closeMainWindow() {
+	m.logger.Info("----------------")
+	m.logger.Info("Exit GitDiscover")
+	m.logger.Info("----------------")
+	m.logger = nil
 	m.window.Close()
 	m.repositoryListBox.Destroy()
 	m.repositoryListBox = nil
@@ -116,6 +135,7 @@ func (m *MainWindow) addButtonClicked() {
 		"Cancel",
 		gtk.RESPONSE_CANCEL)
 	if err != nil {
+		m.logger.Panic(err)
 		panic(err)
 	}
 	dialog.SetModal(true)
@@ -126,7 +146,11 @@ func (m *MainWindow) addButtonClicked() {
 	}
 
 	config := gitConfig.NewConfig()
-	config.Load()
+	err = config.Load()
+	if err != nil {
+		m.logger.Panic(err)
+		panic(err)
+	}
 	config.Paths = append(config.Paths, dialog.GetFilename())
 	config.Save()
 	fmt.Println("Added path : ", dialog.GetFilename())
@@ -136,18 +160,22 @@ func (m *MainWindow) addButtonClicked() {
 
 func (m *MainWindow) removeButtonClicked() {
 	repo := m.getSelectedRepo()
-	path := strings.Trim(repo.Path, " ")
+	trimmedPath := strings.Trim(repo.Path, " ")
 
 	config := gitConfig.NewConfig()
-	config.Load()
+	err := config.Load()
+	if err != nil {
+		m.logger.Panic(err)
+		panic(err)
+	}
 	for i, v := range config.Paths {
-		if v == path {
+		if v == trimmedPath {
 			config.Paths = append(config.Paths[:i], config.Paths[i+1:]...)
 			break
 		}
 	}
 	config.Save()
-	fmt.Println("Removed path : ", path)
+	fmt.Println("Removed path : ", trimmedPath)
 	m.refreshList()
 }
 
@@ -163,22 +191,21 @@ func (m *MainWindow) refreshList() {
 	config := gitConfig.NewConfig()
 	err := config.Load()
 	if err != nil {
+		m.logger.Panic(err)
 		panic(err)
 	}
 
-	git := gitdiscover.GitNew(config)
+	git := gitdiscover.NewGit(config, m.logger)
 	m.repositories, err = git.GetRepositories()
 	if err != nil {
+		m.logger.Panic(err)
 		panic(err)
 	}
 
 	// Fill list
 	for i := range m.repositories {
 		repo := m.repositories[i]
-		listItem, err := m.createListBoxItem(i, config.DateFormat, repo)
-		if err != nil {
-			panic(err)
-		}
+		listItem := m.createListBoxItem(i, config.DateFormat, repo)
 		m.repositoryListBox.Add(listItem)
 	}
 	m.repositoryListBox.ShowAll()
@@ -197,12 +224,13 @@ func (m *MainWindow) clearList() {
 	}
 }
 
-func (m *MainWindow) createListBoxItem(index int, dateFormat string, repo gitdiscover.RepositoryStatus) (*gtk.Box, error) {
+func (m *MainWindow) createListBoxItem(index int, dateFormat string, repo gitdiscover.RepositoryStatus) *gtk.Box {
 	box, err := gtk.BoxNew(gtk.ORIENTATION_HORIZONTAL, 10)
-	box.SetName(fmt.Sprintf("box_%v", index))
 	if err != nil {
-		return nil, err
+		m.logger.Panic(err)
+		panic(err)
 	}
+	box.SetName(fmt.Sprintf("box_%v", index))
 
 	// Icon
 	assetsPath := path.Join(repo.Path, "assets")
@@ -211,24 +239,27 @@ func (m *MainWindow) createListBoxItem(index int, dateFormat string, repo gitdis
 		// General icon for project that don't have one
 		iconPath, err = getResourcePath("code.png")
 		if err != nil {
-			return nil, err
+			m.logger.Panic(err)
+			panic(err)
 		}
 	}
-	pix, err := gdk.PixbufNewFromFileAtSize(iconPath,16,16)
+	pix, err := gdk.PixbufNewFromFileAtSize(iconPath, 16, 16)
 	if err != nil {
-		return nil,err
+		m.logger.Panic(err)
+		panic(err)
 	}
 	image, err := gtk.ImageNewFromPixbuf(pix)
 	if err != nil {
-		return nil,err
+		m.logger.Panic(err)
+		panic(err)
 	}
 	box.PackStart(image, false, false, 10)
-
 
 	// Date
 	label, err := gtk.LabelNew("")
 	if err != nil {
-		return nil, err
+		m.logger.Panic(err)
+		panic(err)
 	}
 	var text = ""
 	if repo.Date == nil {
@@ -244,7 +275,8 @@ func (m *MainWindow) createListBoxItem(index int, dateFormat string, repo gitdis
 	// Status
 	label, err = gtk.LabelNew("")
 	if err != nil {
-		return nil, err
+		m.logger.Panic(err)
+		panic(err)
 	}
 	text = `<span font="Sans Regular 10" foreground="#44DD44">` + repo.Status + `</span>`
 	label.SetMarkup(text)
@@ -255,13 +287,14 @@ func (m *MainWindow) createListBoxItem(index int, dateFormat string, repo gitdis
 	// Path
 	label, err = gtk.LabelNew(repo.Path)
 	if err != nil {
-		return nil, err
+		m.logger.Panic(err)
+		panic(err)
 	}
 	label.SetName("lblPath")
 	label.SetHAlign(gtk.ALIGN_START)
 	box.PackEnd(label, true, true, 10)
 
-	return box, nil
+	return box
 }
 
 func (m *MainWindow) openInTerminal(path string) {
@@ -284,7 +317,7 @@ func (m *MainWindow) executeCommand(command, path string) {
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		Setpgid: true,
 	}
-	
+
 	// set var to get the output
 	var out bytes.Buffer
 
@@ -292,7 +325,8 @@ func (m *MainWindow) executeCommand(command, path string) {
 	cmd.Stdout = &out
 	err := cmd.Start()
 	if err != nil {
-		log.Println(err)
+		m.logger.Error(err)
+		return
 	}
 	cmd.Process.Release()
 
@@ -300,7 +334,7 @@ func (m *MainWindow) executeCommand(command, path string) {
 }
 
 func (m *MainWindow) openConfigButtonClicked() {
-	m.executeCommand("xed","/home/per/.config/softteam/gitdiscover/config.json")
+	m.executeCommand("xed", "/home/per/.config/softteam/gitdiscover/config.json")
 }
 
 func (m *MainWindow) openInTerminalButtonClicked() {

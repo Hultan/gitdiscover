@@ -2,6 +2,7 @@ package gitdiscover
 
 import (
 	gitConfig "github.com/hultan/gitdiscover/internal/config"
+	"github.com/sirupsen/logrus"
 	"os"
 	"os/exec"
 	"path"
@@ -17,12 +18,14 @@ type RepositoryStatus struct {
 }
 
 type Git struct {
+	Logger *logrus.Logger
 	Config *gitConfig.Config
 }
 
-func GitNew(config *gitConfig.Config) *Git {
+func NewGit(config *gitConfig.Config, logger *logrus.Logger) *Git {
 	git := new(Git)
 	git.Config = config
+	git.Logger = logger
 	return git
 }
 
@@ -54,7 +57,8 @@ func (g *Git) getGitStatus(path string) string {
 	cmd.Dir = path
 	out, err := cmd.Output()
 	if err != nil {
-		return "failed to check git status"
+		g.Logger.Error("failed to check git status")
+		return ""
 	}
 	return string(out)
 }
@@ -63,6 +67,7 @@ func (g *Git) getGitStatus(path string) string {
 func (g *Git) getModifiedDate(path string) *time.Time {
 	info, err := os.Stat(path)
 	if err != nil {
+		g.Logger.Error("Failed to find modified date for path : ", path)
 		return nil
 	}
 	date := info.ModTime()

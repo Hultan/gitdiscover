@@ -7,6 +7,7 @@ import (
 	"github.com/hultan/gitdiscover/internal/config"
 	"github.com/hultan/gitdiscover/internal/gitdiscover"
 	"github.com/hultan/gitdiscover/internal/gui"
+	"github.com/sirupsen/logrus"
 	"os"
 	"sort"
 )
@@ -31,9 +32,24 @@ func main() {
 		panic(err)
 	}
 
-	gitDiscover := gitdiscover.GitNew(config)
+	logger := logrus.New()
+	logger.Level = logrus.TraceLevel
+	logger.Out = os.Stdout
+
+	file, err := os.OpenFile("logrus.log", os.O_CREATE|os.O_WRONLY, 0666)
+	if err == nil {
+		logger.Out = file
+	} else {
+		logger.Info("Failed to log to file, using default stderr")
+	}
+	logger.Info("--------------------")
+	logger.Info("Starting GitDiscover")
+	logger.Info("--------------------")
+
+	gitDiscover := gitdiscover.NewGit(config, logger)
 	gitStatuses, err := gitDiscover.GetRepositories()
 	if err != nil {
+		logger.Panic(err)
 		panic(err)
 	}
 
@@ -59,6 +75,11 @@ func main() {
 		}
 		fmt.Println(text)
 	}
+
+	logger.Info("----------------")
+	logger.Info("Exit GitDiscover")
+	logger.Info("----------------")
+	logger = nil
 
 	// Exit
 	os.Exit(exitNormal)
