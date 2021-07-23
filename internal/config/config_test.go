@@ -13,8 +13,10 @@ func TestConfig_GetConfigPath(t *testing.T) {
 
 func TestConfig_Load(t *testing.T) {
 	config := NewConfig()
-	config.Load()
-	assert.Equal(t, "/home/per/code/gotk3-more-examples", config.Paths[2])
+	err := config.Load()
+	assert.Nil(t, err)
+	assert.Equal(t, "/home/per/code/gotk3-more-examples", config.Repositories[2].Path)
+	assert.Equal(t, "assets/application.png", config.Repositories[2].ImagePath)
 	assert.Equal(t, "2006-01-02, kl. 15:04", config.DateFormat)
 	assert.Equal(t, 40, config.PathColumnWidth)
 }

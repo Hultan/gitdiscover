@@ -12,9 +12,10 @@ import (
 )
 
 type RepositoryStatus struct {
-	Path   string
-	Status string
-	Date   *time.Time
+	Path      string
+	ImagePath string
+	Status    string
+	Date      *time.Time
 }
 
 type Git struct {
@@ -32,9 +33,10 @@ func NewGit(config *gitConfig.Config, logger *logrus.Logger) *Git {
 func (g *Git) GetRepositories() ([]RepositoryStatus, error) {
 	// Get the git statuses of the paths in the config
 	var gitStatuses []RepositoryStatus
-	for _, basePath := range g.Config.Paths {
+	for _, repo := range g.Config.Repositories {
+		basePath := repo.Path
 		gitPath := path.Join(basePath, ".git")
-		status := RepositoryStatus{Path: basePath}
+		status := RepositoryStatus{Path: basePath, ImagePath: repo.ImagePath}
 
 		if _, err := os.Stat(gitPath); os.IsNotExist(err) {
 			status.Date = nil
@@ -42,7 +44,7 @@ func (g *Git) GetRepositories() ([]RepositoryStatus, error) {
 		} else {
 			gs := g.getGitStatus(basePath)
 			status.Date = g.getModifiedDate(basePath)
-			status.Status = strings.Replace(gs,"\n","",-1)
+			status.Status = strings.Replace(gs, "\n", "", -1)
 		}
 
 		gitStatuses = append(gitStatuses, status)
@@ -78,4 +80,3 @@ func (g *Git) getModifiedDate(path string) *time.Time {
 func (g *Git) createPathFormatString() string {
 	return "%-" + strconv.Itoa(g.Config.PathColumnWidth) + "s"
 }
-

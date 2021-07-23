@@ -9,9 +9,14 @@ import (
 )
 
 type Config struct {
-	Paths           []string `json:"paths"`
-	DateFormat      string   `json:"date-format"`
-	PathColumnWidth int      `json:"path-column-width"`
+	Repositories    []Repository `json:"repositories"`
+	DateFormat      string       `json:"date-format"`
+	PathColumnWidth int          `json:"path-column-width"`
+}
+
+type Repository struct {
+	Path      string `json:"path"`
+	ImagePath string `json:"image-path"`
 }
 
 func NewConfig() *Config {
@@ -39,7 +44,7 @@ func (config *Config) Load() (err error) {
 	// Parse the JSON document
 	jsonParser := json.NewDecoder(configFile)
 	err = jsonParser.Decode(&config)
-	if err!=nil {
+	if err != nil {
 		return err
 	}
 
@@ -60,7 +65,6 @@ func (config *Config) Save() {
 		return
 	}
 
-
 	// Create JSON from config object
 	data, err := json.MarshalIndent(config, "", "\t")
 
@@ -71,7 +75,7 @@ func (config *Config) Save() {
 	}
 
 	// Write the data
-	_,_ = configFile.Write(data)
+	_, _ = configFile.Write(data)
 
 	_ = configFile.Close()
 }

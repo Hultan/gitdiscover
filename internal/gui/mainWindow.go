@@ -136,7 +136,8 @@ func (m *MainWindow) addButtonClicked() {
 		m.logger.Panic(err)
 		panic(err)
 	}
-	config.Paths = append(config.Paths, dialog.GetFilename())
+	repo := gitConfig.Repository{Path: dialog.GetFilename(), ImagePath: "assets/application.png"}
+	config.Repositories = append(config.Repositories, repo)
 	config.Save()
 	fmt.Println("Added path : ", dialog.GetFilename())
 	dialog.Destroy()
@@ -153,9 +154,9 @@ func (m *MainWindow) removeButtonClicked() {
 		m.logger.Panic(err)
 		panic(err)
 	}
-	for i, v := range config.Paths {
-		if v == trimmedPath {
-			config.Paths = append(config.Paths[:i], config.Paths[i+1:]...)
+	for i, repository := range config.Repositories {
+		if repository.Path == trimmedPath {
+			config.Repositories = append(config.Repositories[:i], config.Repositories[i+1:]...)
 			break
 		}
 	}
@@ -218,9 +219,8 @@ func (m *MainWindow) createListBoxItem(index int, dateFormat string, repo gitdis
 	box.SetName(fmt.Sprintf("box_%v", index))
 
 	// Icon
-	assetsPath := path.Join(repo.Path, "assets")
-	iconPath := path.Join(assetsPath, "application.png")
-	if !fileExists(assetsPath) || !fileExists(iconPath) {
+	iconPath := path.Join(repo.Path, repo.ImagePath)
+	if !fileExists(iconPath) {
 		// General icon for project that don't have one
 		iconPath, err = getResourcePath("code.png")
 		if err != nil {
