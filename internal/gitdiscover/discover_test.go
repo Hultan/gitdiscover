@@ -2,6 +2,7 @@ package gitdiscover
 
 import (
 	"github.com/hultan/gitdiscover/internal/config"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -9,7 +10,9 @@ import (
 func TestDiscover_GetRepositories(t *testing.T) {
 	config := config.NewConfig()
 	config.Load()
-	discover := GitNew(config)
+
+	logger := logrus.New()
+	discover := NewGit(config, logger)
 
 	repos, err := discover.GetRepositories()
 	if err != nil {

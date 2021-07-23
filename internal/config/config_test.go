@@ -8,7 +8,7 @@ import (
 func TestConfig_GetConfigPath(t *testing.T) {
 	config := NewConfig()
 	path := config.GetConfigPath()
-	assert.Equal(t,"/home/per/.config/softteam/gitdiscover/config.json", path)
+	assert.Equal(t, "/home/per/.config/softteam/gitdiscover/config.json", path)
 }
 
 func TestConfig_Load(t *testing.T) {
@@ -34,11 +34,6 @@ func TestConfig_NewConfig(t *testing.T) {
 }
 
 func TestConfig_ConfigExists(t *testing.T) {
-	config := NewConfig()
-	assert.True(t, config.ConfigExists())
-}
-
-func TestConfig_CreateEmptyConfig(t *testing.T) {
 	config := NewConfig()
 	assert.True(t, config.ConfigExists())
 }

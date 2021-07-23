@@ -25,21 +25,9 @@ type MainWindow struct {
 }
 
 // NewMainWindow : Creates a new MainWindow object
-func NewMainWindow() *MainWindow {
+func NewMainWindow(logger *logrus.Logger) *MainWindow {
 	mainWindow := new(MainWindow)
-	mainWindow.logger = logrus.New()
-	mainWindow.logger.Level = logrus.TraceLevel
-	mainWindow.logger.Out = os.Stdout
-
-	file, err := os.OpenFile("logrus.log", os.O_CREATE|os.O_WRONLY, 0666)
-	if err == nil {
-		mainWindow.logger.Out = file
-	} else {
-		mainWindow.logger.Info("Failed to log to file, using default stderr")
-	}
-	mainWindow.logger.Info("--------------------")
-	mainWindow.logger.Info("Starting GitDiscover")
-	mainWindow.logger.Info("--------------------")
+	mainWindow.logger = logger
 
 	return mainWindow
 }
@@ -83,9 +71,6 @@ func (m *MainWindow) OpenMainWindow(app *gtk.Application) {
 }
 
 func (m *MainWindow) closeMainWindow() {
-	m.logger.Info("----------------")
-	m.logger.Info("Exit GitDiscover")
-	m.logger.Info("----------------")
 	m.logger = nil
 	m.window.Close()
 	m.repositoryListBox.Destroy()
@@ -359,4 +344,8 @@ func (m *MainWindow) getSelectedRepo() gitdiscover.RepositoryStatus {
 	repo.Path = strings.Trim(repo.Path, " ")
 
 	return repo
+}
+
+func GetVersion() string {
+	return applicationVersion
 }

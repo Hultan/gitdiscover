@@ -13,43 +13,45 @@ import (
 )
 
 func main() {
-	gui := isGuiRequested()
-	if gui {
-		fmt.Printf("Gitdiscover : Starting GUI!\n")
-		showGUI()
+	logger := startLogging()
+
+	// Check command line arguments
+	guiRequested := isGuiRequested()
+	if guiRequested {
+		logger.Info("Starting GitDiscover GUI!")
+		showGUI(logger)
 		return
 	}
 
-	// Check command line arguments
-	handled := checkArguments()
-	if handled {
-		os.Exit(exitNormal)
+	if len(os.Args) > 1 {
+		if os.Args[1] == "--version" {
+			version := gui.GetVersion()
+			logger.Info("Version requested : ", version)
+			fmt.Printf("Gitdiscover %s\n", version)
+			os.Exit(exitNormal)
+		} else if os.Args[1] == "--help" {
+			logger.Info("Help requested.")
+			fmt.Println("Usage : gitdiscover [--version] [--help]")
+			os.Exit(exitNormal)
+		} else {
+			logger.Info("Invalid argument : ", os.Args[1])
+			fmt.Println("Invalid argument : ", os.Args[1])
+			fmt.Println("Usage : gitdiscover [--version] [--help]")
+			os.Exit(exitArgumentError)
+		}
 	}
 
 	// Load config
 	config, err := loadConfig()
 	if err != nil {
+		logger.Error(err)
 		panic(err)
 	}
-
-	logger := logrus.New()
-	logger.Level = logrus.TraceLevel
-	logger.Out = os.Stdout
-
-	file, err := os.OpenFile("logrus.log", os.O_CREATE|os.O_WRONLY, 0666)
-	if err == nil {
-		logger.Out = file
-	} else {
-		logger.Info("Failed to log to file, using default stderr")
-	}
-	logger.Info("--------------------")
-	logger.Info("Starting GitDiscover")
-	logger.Info("--------------------")
 
 	gitDiscover := gitdiscover.NewGit(config, logger)
 	gitStatuses, err := gitDiscover.GetRepositories()
 	if err != nil {
-		logger.Panic(err)
+		logger.Error(err)
 		panic(err)
 	}
 
@@ -64,7 +66,8 @@ func main() {
 	})
 
 	// Print out the git statuses
-	fmt.Println("Git Repository Statuses")
+	fmt.Println("Git Repository Statuses : ")
+	logger.Info("Git Repository Statuses : ")
 	fmt.Println("_______________________")
 	for _, status := range gitStatuses {
 		var text = ""
@@ -73,45 +76,35 @@ func main() {
 		} else {
 			text = fmt.Sprintf("%s - %s - %s", status.Date.Format(config.DateFormat), status.Path, status.Status)
 		}
+		logger.Info(text)
 		fmt.Println(text)
 	}
 
-	logger.Info("----------------")
-	logger.Info("Exit GitDiscover")
-	logger.Info("----------------")
-	logger = nil
+	stopLogging(logger)
 
 	// Exit
 	os.Exit(exitNormal)
 }
 
-func checkArguments() bool {
-	if len(os.Args) == 1 {
-		return false
-	}
+func stopLogging(logger *logrus.Logger) {
+	logger.Info("Exit GitDiscover")
 
-	if os.Args[1] == "--version" {
-		fmt.Printf("Gitdiscover %s\n", applicationVersion)
-		return true
-	} else if os.Args[1] == "--help" {
-		fmt.Println("Usage : gitdiscover [--version] [--help] [add-path path]")
-		return true
-	} else if os.Args[1] == "add-path" && len(os.Args) == 3 {
-		config := config.NewConfig()
-		err:=config.Load()
-		if err!=nil {
-			fmt.Println(err)
-			os.Exit(exitConfigError)
-		}
-		config.Paths = append(config.Paths, os.Args[2])
-		config.Save()
-		fmt.Printf("The path '%s' has been added to the gitdiscover config!", os.Args[2])
-		return true
-	}
+	logger = nil
+}
 
-	fmt.Println("Invalid argument!")
-	os.Exit(exitArgumentError)
-	return false
+func startLogging() *logrus.Logger {
+	logger := logrus.New()
+	logger.Level = logrus.TraceLevel
+	logger.Out = os.Stdout
+
+	file, err := os.OpenFile("logrus.log", os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0666)
+	if err == nil {
+		logger.Out = file
+	} else {
+		logger.Info("Failed to log to file, using default stderr")
+	}
+	logger.Info("Starting GitDiscover")
+	return logger
 }
 
 func loadConfig() (*config.Config, error) {
@@ -145,17 +138,19 @@ func isGuiRequested() bool {
 	return false
 }
 
-func showGUI() {
+func showGUI(logger *logrus.Logger) {
 	// Create a new application
 	application, err := gtk.ApplicationNew(ApplicationId, ApplicationFlags)
 	if err != nil {
 		panic(err)
 	}
 
-	mainForm := gui.NewMainWindow()
+	mainForm := gui.NewMainWindow(logger)
 	// Hook up the activate event handler
 	_ = application.Connect("activate", mainForm.OpenMainWindow)
 
 	// Start the application (and exit when it is done)
-	os.Exit(application.Run(nil))
+	exitCode := application.Run(nil)
+	stopLogging(logger)
+	os.Exit(exitCode)
 }
