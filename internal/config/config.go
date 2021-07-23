@@ -10,6 +10,7 @@ import (
 
 type Config struct {
 	Repositories    []Repository `json:"repositories"`
+	OpenIns         []OpenIn     `json:"openins"`
 	DateFormat      string       `json:"date-format"`
 	PathColumnWidth int          `json:"path-column-width"`
 }
@@ -17,6 +18,12 @@ type Config struct {
 type Repository struct {
 	Path      string `json:"path"`
 	ImagePath string `json:"image-path"`
+}
+
+type OpenIn struct {
+	Name     string `json:"name"`
+	Command  string `json:"command"`
+	Argument string `json:"argument"`
 }
 
 func NewConfig() *Config {

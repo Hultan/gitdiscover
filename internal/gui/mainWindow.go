@@ -17,6 +17,7 @@ import (
 
 type MainWindow struct {
 	logger            *logrus.Logger
+	config            *gitConfig.Config
 	builder           *SoftBuilder
 	window            *gtk.ApplicationWindow
 	repositoryListBox *gtk.ListBox
@@ -28,6 +29,13 @@ type MainWindow struct {
 func NewMainWindow(logger *logrus.Logger) *MainWindow {
 	mainWindow := new(MainWindow)
 	mainWindow.logger = logger
+
+	mainWindow.config = gitConfig.NewConfig()
+	err := mainWindow.config.Load()
+	if err != nil {
+		logger.Panic(err)
+		panic(err)
+	}
 
 	return mainWindow
 }
@@ -130,15 +138,9 @@ func (m *MainWindow) addButtonClicked() {
 		return
 	}
 
-	config := gitConfig.NewConfig()
-	err = config.Load()
-	if err != nil {
-		m.logger.Panic(err)
-		panic(err)
-	}
 	repo := gitConfig.Repository{Path: dialog.GetFilename(), ImagePath: "assets/application.png"}
-	config.Repositories = append(config.Repositories, repo)
-	config.Save()
+	m.config.Repositories = append(m.config.Repositories, repo)
+	m.config.Save()
 	fmt.Println("Added path : ", dialog.GetFilename())
 	dialog.Destroy()
 	m.refreshList()
@@ -146,21 +148,19 @@ func (m *MainWindow) addButtonClicked() {
 
 func (m *MainWindow) removeButtonClicked() {
 	repo := m.getSelectedRepo()
+	if repo == nil {
+		return
+	}
+
 	trimmedPath := strings.Trim(repo.Path, " ")
 
-	config := gitConfig.NewConfig()
-	err := config.Load()
-	if err != nil {
-		m.logger.Panic(err)
-		panic(err)
-	}
-	for i, repository := range config.Repositories {
+	for i, repository := range m.config.Repositories {
 		if repository.Path == trimmedPath {
-			config.Repositories = append(config.Repositories[:i], config.Repositories[i+1:]...)
+			m.config.Repositories = append(m.config.Repositories[:i], m.config.Repositories[i+1:]...)
 			break
 		}
 	}
-	config.Save()
+	m.config.Save()
 	fmt.Println("Removed path : ", trimmedPath)
 	m.refreshList()
 }
@@ -173,25 +173,18 @@ func (m *MainWindow) refreshList() {
 	// Clear list
 	m.clearList()
 
-	// Get repositories
-	config := gitConfig.NewConfig()
-	err := config.Load()
+	git := gitdiscover.NewGit(m.config, m.logger)
+	repos, err := git.GetRepositories()
 	if err != nil {
 		m.logger.Panic(err)
 		panic(err)
 	}
-
-	git := gitdiscover.NewGit(config, m.logger)
-	m.repositories, err = git.GetRepositories()
-	if err != nil {
-		m.logger.Panic(err)
-		panic(err)
-	}
+	m.repositories = repos
 
 	// Fill list
 	for i := range m.repositories {
 		repo := m.repositories[i]
-		listItem := m.createListBoxItem(i, config.DateFormat, repo)
+		listItem := m.createListBoxItem(i, m.config.DateFormat, repo)
 		m.repositoryListBox.Add(listItem)
 	}
 	m.repositoryListBox.ShowAll()
@@ -282,16 +275,33 @@ func (m *MainWindow) createListBoxItem(index int, dateFormat string, repo gitdis
 	return box
 }
 
+func (m *MainWindow) openInByName(name string, path string) {
+	for _, openIn := range m.config.OpenIns {
+		if openIn.Name == name {
+			m.openIn(openIn, path)
+			break
+		}
+	}
+}
+
+func (m *MainWindow) openIn(openIn gitConfig.OpenIn, path string) {
+	argument := strings.Replace(openIn.Argument, "%PATH%", path, -1)
+	m.executeCommand(openIn.Command, argument)
+}
+
 func (m *MainWindow) openInTerminal(path string) {
-	m.executeCommand("gnome-terminal", "--working-directory="+path)
+	m.openInByName("Terminal", path)
+	//m.executeCommand("gnome-terminal", "--working-directory="+path)
 }
 
 func (m *MainWindow) openInNemo(path string) {
-	m.executeCommand("nemo", path)
+	m.openInByName("Nemo", path)
+	//m.executeCommand("nemo", path)
 }
 
 func (m *MainWindow) openInGoland(path string) {
-	m.executeCommand("goland", path)
+	m.openInByName("GoLand", path)
+	//m.executeCommand("goland", path)
 }
 
 func (m *MainWindow) executeCommand(command, path string) {
@@ -313,8 +323,12 @@ func (m *MainWindow) executeCommand(command, path string) {
 		m.logger.Error(err)
 		return
 	}
-	cmd.Process.Release()
-
+	err = cmd.Process.Release()
+	if err != nil {
+		m.logger.Error(err)
+		return
+	}
+	
 	fmt.Println(out.String())
 }
 
@@ -324,26 +338,38 @@ func (m *MainWindow) openConfigButtonClicked() {
 
 func (m *MainWindow) openInTerminalButtonClicked() {
 	repo := m.getSelectedRepo()
+	if repo == nil {
+		return
+	}
 	m.openInTerminal(repo.Path)
 }
 
 func (m *MainWindow) openInNemoButtonClicked() {
 	repo := m.getSelectedRepo()
+	if repo == nil {
+		return
+	}
 	m.openInNemo(repo.Path)
 }
 
 func (m *MainWindow) openInGolandButtonClicked() {
 	repo := m.getSelectedRepo()
+	if repo == nil {
+		return
+	}
 	m.openInGoland(repo.Path)
 }
 
-func (m *MainWindow) getSelectedRepo() gitdiscover.RepositoryStatus {
+func (m *MainWindow) getSelectedRepo() *gitdiscover.RepositoryStatus {
 	row := m.repositoryListBox.GetSelectedRow()
 	index := row.GetIndex()
+	if index == -1 {
+		return nil
+	}
 	repo := m.repositories[index]
 	repo.Path = strings.Trim(repo.Path, " ")
 
-	return repo
+	return &repo
 }
 
 func GetVersion() string {
