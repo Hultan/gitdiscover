@@ -6,6 +6,7 @@ const (
 	exitNormal = 0
 	exitConfigError = 1
 	exitArgumentError = 2
+	exitUnknown = 3
 )
 
 const (

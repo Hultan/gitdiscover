@@ -16,8 +16,9 @@ import (
 )
 
 type MainWindow struct {
-	logger            *logrus.Logger
-	config            *gitConfig.Config
+	logger *logrus.Logger
+	config *gitConfig.Config
+
 	builder           *SoftBuilder
 	window            *gtk.ApplicationWindow
 	repositoryListBox *gtk.ListBox
@@ -26,17 +27,10 @@ type MainWindow struct {
 }
 
 // NewMainWindow : Creates a new MainWindow object
-func NewMainWindow(logger *logrus.Logger) *MainWindow {
+func NewMainWindow(logger *logrus.Logger, config *gitConfig.Config) *MainWindow {
 	mainWindow := new(MainWindow)
 	mainWindow.logger = logger
-
-	mainWindow.config = gitConfig.NewConfig()
-	err := mainWindow.config.Load()
-	if err != nil {
-		logger.Panic(err)
-		panic(err)
-	}
-
+	mainWindow.config = config
 	return mainWindow
 }
 
@@ -53,26 +47,21 @@ func (m *MainWindow) OpenMainWindow(app *gtk.Application) {
 
 	// Set up main window
 	m.window.SetApplication(app)
-	m.window.SetTitle(fmt.Sprintf("%s - %s", applicationTitle, applicationVersion))
-
-	// Hook up the destroy event
+	m.window.SetTitle(fmt.Sprintf("%s - %s", ApplicationTitle, ApplicationVersion))
 	_ = m.window.Connect("destroy", m.closeMainWindow)
 
 	// Toolbar
 	m.setupToolBar()
 
-	//// Menu
-	//m.setupMenu(m.window)
-
 	// Status bar
 	lblInformation := m.builder.getObject("lblApplicationInfo").(*gtk.Label)
-	lblInformation.SetText(fmt.Sprintf("%s %s - %s", applicationTitle, applicationVersion, applicationCopyRight))
+	lblInformation.SetText(fmt.Sprintf("%s %s - %s", ApplicationTitle, ApplicationVersion, ApplicationCopyRight))
 
 	// Repository list box
 	m.repositoryListBox = m.builder.getObject("repositoryListBox").(*gtk.ListBox)
 
 	// Refresh repository list
-	m.refreshList()
+	m.refreshRepositoryList()
 
 	// Show the main window
 	m.window.ShowAll()
@@ -104,7 +93,7 @@ func (m *MainWindow) setupToolBar() {
 
 	// Refresh button
 	button = m.builder.getObject("toolbarRefreshButton").(*gtk.ToolButton)
-	_ = button.Connect("clicked", m.refreshButtonClicked)
+	_ = button.Connect("clicked", m.refreshRepositoryList)
 
 	// Open config button
 	button = m.builder.getObject("toolbarOpenConfigButton").(*gtk.ToolButton)
@@ -143,7 +132,7 @@ func (m *MainWindow) addButtonClicked() {
 	m.config.Save()
 	fmt.Println("Added path : ", dialog.GetFilename())
 	dialog.Destroy()
-	m.refreshList()
+	m.refreshRepositoryList()
 }
 
 func (m *MainWindow) removeButtonClicked() {
@@ -162,14 +151,10 @@ func (m *MainWindow) removeButtonClicked() {
 	}
 	m.config.Save()
 	fmt.Println("Removed path : ", trimmedPath)
-	m.refreshList()
+	m.refreshRepositoryList()
 }
 
-func (m *MainWindow) refreshButtonClicked() {
-	m.refreshList()
-}
-
-func (m *MainWindow) refreshList() {
+func (m *MainWindow) refreshRepositoryList() {
 	// Clear list
 	m.clearList()
 
@@ -199,11 +184,13 @@ func (m *MainWindow) clearList() {
 	for ; i < children.Length(); {
 		widget, _ := children.NthData(i).(*gtk.Widget)
 		m.repositoryListBox.Remove(widget)
+		widget.Destroy()
 		i++
 	}
 }
 
 func (m *MainWindow) createListBoxItem(index int, dateFormat string, repo gitdiscover.RepositoryStatus) *gtk.Box {
+	// Create main box
 	box, err := gtk.BoxNew(gtk.ORIENTATION_HORIZONTAL, 10)
 	if err != nil {
 		m.logger.Panic(err)
@@ -275,33 +262,69 @@ func (m *MainWindow) createListBoxItem(index int, dateFormat string, repo gitdis
 	return box
 }
 
-func (m *MainWindow) openInByName(name string, path string) {
-	for _, openIn := range m.config.OpenIns {
+func (m *MainWindow) getSelectedRepo() *gitdiscover.RepositoryStatus {
+	row := m.repositoryListBox.GetSelectedRow()
+	index := row.GetIndex()
+	if index == -1 {
+		// TODO : MessageBox "Pleade select a repo!"
+		return nil
+	}
+	repo := m.repositories[index]
+	repo.Path = strings.Trim(repo.Path, " ")
+
+	return &repo
+}
+
+func (m *MainWindow) openConfigButtonClicked() {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		m.logger.Error("Failed to get user home dir", err)
+		return
+	}
+
+	m.executeCommand("xed", path.Join(homeDir, ".config/softteam/gitdiscover/config.json"))
+}
+
+func (m *MainWindow) openInTerminalButtonClicked() {
+	repo := m.getSelectedRepo()
+	if repo == nil {
+		return
+	}
+	m.openInExternalApplication("Terminal", repo)
+}
+
+func (m *MainWindow) openInNemoButtonClicked() {
+	repo := m.getSelectedRepo()
+	if repo == nil {
+		return
+	}
+	m.openInExternalApplication("Nemo", repo)
+}
+
+func (m *MainWindow) openInGolandButtonClicked() {
+	repo := m.getSelectedRepo()
+	if repo == nil {
+		return
+	}
+	m.openInExternalApplication("GoLand", repo)
+}
+
+func (m *MainWindow) openInExternalApplication(name string, repo *gitdiscover.RepositoryStatus) {
+	opened := false
+
+	for _, openIn := range m.config.ExternalApplications {
 		if openIn.Name == name {
-			m.openIn(openIn, path)
+			argument := strings.Replace(openIn.Argument, "%PATH%", repo.Path, -1)
+			argument = strings.Replace(argument, "%IMAGEPATH%", repo.ImagePath, -1)
+			m.executeCommand(openIn.Command, argument)
+			opened = true
 			break
 		}
 	}
-}
 
-func (m *MainWindow) openIn(openIn gitConfig.OpenIn, path string) {
-	argument := strings.Replace(openIn.Argument, "%PATH%", path, -1)
-	m.executeCommand(openIn.Command, argument)
-}
-
-func (m *MainWindow) openInTerminal(path string) {
-	m.openInByName("Terminal", path)
-	//m.executeCommand("gnome-terminal", "--working-directory="+path)
-}
-
-func (m *MainWindow) openInNemo(path string) {
-	m.openInByName("Nemo", path)
-	//m.executeCommand("nemo", path)
-}
-
-func (m *MainWindow) openInGoland(path string) {
-	m.openInByName("GoLand", path)
-	//m.executeCommand("goland", path)
+	if !opened {
+		m.logger.Error("Failed to open external application")
+	}
 }
 
 func (m *MainWindow) executeCommand(command, path string) {
@@ -323,55 +346,6 @@ func (m *MainWindow) executeCommand(command, path string) {
 		m.logger.Error(err)
 		return
 	}
-	err = cmd.Process.Release()
-	if err != nil {
-		m.logger.Error(err)
-		return
-	}
-	
+
 	fmt.Println(out.String())
-}
-
-func (m *MainWindow) openConfigButtonClicked() {
-	m.executeCommand("xed", "/home/per/.config/softteam/gitdiscover/config.json")
-}
-
-func (m *MainWindow) openInTerminalButtonClicked() {
-	repo := m.getSelectedRepo()
-	if repo == nil {
-		return
-	}
-	m.openInTerminal(repo.Path)
-}
-
-func (m *MainWindow) openInNemoButtonClicked() {
-	repo := m.getSelectedRepo()
-	if repo == nil {
-		return
-	}
-	m.openInNemo(repo.Path)
-}
-
-func (m *MainWindow) openInGolandButtonClicked() {
-	repo := m.getSelectedRepo()
-	if repo == nil {
-		return
-	}
-	m.openInGoland(repo.Path)
-}
-
-func (m *MainWindow) getSelectedRepo() *gitdiscover.RepositoryStatus {
-	row := m.repositoryListBox.GetSelectedRow()
-	index := row.GetIndex()
-	if index == -1 {
-		return nil
-	}
-	repo := m.repositories[index]
-	repo.Path = strings.Trim(repo.Path, " ")
-
-	return &repo
-}
-
-func GetVersion() string {
-	return applicationVersion
 }

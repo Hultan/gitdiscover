@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gotk3/gotk3/gtk"
-	"github.com/hultan/gitdiscover/internal/config"
+	gitConfig "github.com/hultan/gitdiscover/internal/config"
 	"github.com/hultan/gitdiscover/internal/gitdiscover"
 	"github.com/hultan/gitdiscover/internal/gui"
 	"github.com/sirupsen/logrus"
@@ -12,47 +12,30 @@ import (
 	"sort"
 )
 
-func main() {
-	logger := startLogging()
+var (
+	logger *logrus.Logger
+)
 
-	// Check command line arguments
+func main() {
+	// Logging and config
+	logger = startLogging()
+	config := loadConfig()
+
+	// Check if GUI is reuqested
 	guiRequested := isGuiRequested()
 	if guiRequested {
 		logger.Info("Starting GitDiscover GUI!")
-		showGUI(logger)
-		return
+		showGUI(logger, config)
 	}
 
-	if len(os.Args) > 1 {
-		if os.Args[1] == "--version" {
-			version := gui.GetVersion()
-			logger.Info("Version requested : ", version)
-			fmt.Printf("Gitdiscover %s\n", version)
-			os.Exit(exitNormal)
-		} else if os.Args[1] == "--help" {
-			logger.Info("Help requested.")
-			fmt.Println("Usage : gitdiscover [--version] [--help]")
-			os.Exit(exitNormal)
-		} else {
-			logger.Info("Invalid argument : ", os.Args[1])
-			fmt.Println("Invalid argument : ", os.Args[1])
-			fmt.Println("Usage : gitdiscover [--version] [--help]")
-			os.Exit(exitArgumentError)
-		}
-	}
+	// Check command line arguments
+	checkArguments()
 
-	// Load config
-	config, err := loadConfig()
-	if err != nil {
-		logger.Error(err)
-		panic(err)
-	}
-
+	// Get repository list
 	gitDiscover := gitdiscover.NewGit(config, logger)
 	gitStatuses, err := gitDiscover.GetRepositories()
 	if err != nil {
-		logger.Error(err)
-		panic(err)
+		exitProgram(exitUnknown, err)
 	}
 
 	// Sort the git status string after modified date of the .git folder
@@ -76,55 +59,73 @@ func main() {
 		} else {
 			text = fmt.Sprintf("%s - %s - %s", status.Date.Format(config.DateFormat), status.Path, status.Status)
 		}
-		logger.Info(text)
 		fmt.Println(text)
+		logger.Info(text)
 	}
 
-	stopLogging(logger)
-
-	// Exit
-	os.Exit(exitNormal)
+	exitProgram(exitNormal, nil)
 }
+
+func exitProgram(exitCode int, err error) {
+	if err!=nil {
+		fmt.Println(err)
+		logger.Error(err)
+	}
+	stopLogging(logger)
+	os.Exit(exitCode)
+}
+
+//
+// Logging functions
+//
 
 func stopLogging(logger *logrus.Logger) {
 	logger.Info("Exit GitDiscover")
-
 	logger = nil
 }
 
 func startLogging() *logrus.Logger {
-	logger := logrus.New()
-	logger.Level = logrus.TraceLevel
-	logger.Out = os.Stdout
+	l := logrus.New()
+	l.Level = logrus.TraceLevel
+	l.Out = os.Stdout
 
 	file, err := os.OpenFile("logrus.log", os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0666)
 	if err == nil {
-		logger.Out = file
+		l.Out = file
 	} else {
-		logger.Info("Failed to log to file, using default stderr")
+		l.Info("Failed to log to file, using default stderr")
 	}
-	logger.Info("Starting GitDiscover")
-	return logger
+	l.Info("Starting GitDiscover")
+	return l
 }
 
-func loadConfig() (*config.Config, error) {
-	// Load config
-	config := config.NewConfig()
+//
+// Config functions
+//
+
+func loadConfig() *gitConfig.Config {
+	config := gitConfig.NewConfig()
 	if config.ConfigExists() {
+		// Existing config file
 		err := config.Load()
 		if err != nil {
-			return nil, errors.New(fmt.Sprintf("Failed to load config file (%s).\n", config.GetConfigPath()))
+			exitProgram(exitConfigError, err)
 		}
 	} else {
+		// New config file
 		err := config.CreateEmptyConfig()
 		if err!=nil {
-			return nil, errors.New(fmt.Sprintf("Missing config file (%s).\n", config.GetConfigPath()))
+			exitProgram(exitConfigError, err)
 		}
 		fmt.Println("done!")
 	}
 
-	return config, nil
+	return config
 }
+
+//
+// GUI functions
+//
 
 func isGuiRequested() bool {
 	if len(os.Args) == 1 {
@@ -138,19 +139,41 @@ func isGuiRequested() bool {
 	return false
 }
 
-func showGUI(logger *logrus.Logger) {
+func showGUI(logger *logrus.Logger, config *gitConfig.Config) {
 	// Create a new application
 	application, err := gtk.ApplicationNew(ApplicationId, ApplicationFlags)
 	if err != nil {
-		panic(err)
+		exitProgram(exitUnknown, err)
 	}
 
-	mainForm := gui.NewMainWindow(logger)
+	mainForm := gui.NewMainWindow(logger, config)
 	// Hook up the activate event handler
 	_ = application.Connect("activate", mainForm.OpenMainWindow)
 
 	// Start the application (and exit when it is done)
 	exitCode := application.Run(nil)
-	stopLogging(logger)
-	os.Exit(exitCode)
+	exitProgram(exitCode, nil)
+}
+
+//
+// Check command line arguments
+//
+
+func checkArguments() {
+	if len(os.Args) > 1 {
+		if os.Args[1] == "--version" {
+			version := gui.ApplicationVersion
+			logger.Info("Version requested : ", version)
+			fmt.Printf("Gitdiscover %s\n", version)
+			exitProgram(exitNormal, nil)
+		} else if os.Args[1] == "--help" {
+			logger.Info("Help requested.")
+			fmt.Println("Usage : gitdiscover [--version] [--help]")
+			exitProgram(exitNormal, nil)
+		} else {
+			err := errors.New(fmt.Sprintf("Invalid argument : %s", os.Args[1]))
+			fmt.Println("Usage : gitdiscover [--version] [--help]")
+			exitProgram(exitArgumentError, err)
+		}
+	}
 }

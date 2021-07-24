@@ -17,9 +17,9 @@ func TestConfig_Load(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, "/home/per/code/gotk3-more-examples", config.Repositories[2].Path)
 	assert.Equal(t, "assets/application.png", config.Repositories[2].ImagePath)
-	assert.Equal(t, "Nemo", config.OpenIns[1].Name)
-	assert.Equal(t, "nemo", config.OpenIns[1].Command)
-	assert.Equal(t, "%PATH%", config.OpenIns[1].Argument)
+	assert.Equal(t, "Nemo", config.ExternalApplications[1].Name)
+	assert.Equal(t, "nemo", config.ExternalApplications[1].Command)
+	assert.Equal(t, "%PATH%", config.ExternalApplications[1].Argument)
 	assert.Equal(t, "2006-01-02, kl. 15:04", config.DateFormat)
 	assert.Equal(t, 40, config.PathColumnWidth)
 }

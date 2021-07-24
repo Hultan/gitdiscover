@@ -9,10 +9,10 @@ import (
 )
 
 type Config struct {
-	Repositories    []Repository `json:"repositories"`
-	OpenIns         []OpenIn     `json:"openins"`
-	DateFormat      string       `json:"date-format"`
-	PathColumnWidth int          `json:"path-column-width"`
+	Repositories         []Repository          `json:"repositories"`
+	ExternalApplications []ExternalApplication `json:"external-applications"`
+	DateFormat           string                `json:"date-format"`
+	PathColumnWidth      int                   `json:"path-column-width"`
 }
 
 type Repository struct {
@@ -20,7 +20,7 @@ type Repository struct {
 	ImagePath string `json:"image-path"`
 }
 
-type OpenIn struct {
+type ExternalApplication struct {
 	Name     string `json:"name"`
 	Command  string `json:"command"`
 	Argument string `json:"argument"`
