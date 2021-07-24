@@ -24,6 +24,7 @@ type MainWindow struct {
 	repositoryListBox *gtk.ListBox
 	repositories      []gitdiscover.RepositoryStatus
 	terminalOrNemo    *gtk.ToggleToolButton
+	aboutDialog       *gtk.AboutDialog
 }
 
 // NewMainWindow : Creates a new MainWindow object
@@ -40,7 +41,7 @@ func (m *MainWindow) OpenMainWindow(app *gtk.Application) {
 	gtk.Init(&os.Args)
 
 	// Create a new softBuilder
-	m.builder = SoftBuilderNew("main.glade")
+	m.builder = SoftBuilderNew("main.glade", m.logger)
 
 	// Get the main window from the glade file
 	m.window = m.builder.getObject("mainWindow").(*gtk.ApplicationWindow)
@@ -52,6 +53,9 @@ func (m *MainWindow) OpenMainWindow(app *gtk.Application) {
 
 	// Toolbar
 	m.setupToolBar()
+
+	// MenuBar
+	m.setupMenuBar()
 
 	// Status bar
 	lblInformation := m.builder.getObject("lblApplicationInfo").(*gtk.Label)
@@ -75,6 +79,7 @@ func (m *MainWindow) closeMainWindow() {
 	m.repositories = nil
 	m.terminalOrNemo = nil
 	m.window = nil
+	m.builder.destroy()
 	m.builder = nil
 }
 
@@ -106,6 +111,20 @@ func (m *MainWindow) setupToolBar() {
 	_ = button.Connect("clicked", m.openInNemoButtonClicked)
 	button = m.builder.getObject("toolbarGoland").(*gtk.ToolButton)
 	_ = button.Connect("clicked", m.openInGolandButtonClicked)
+}
+
+func (m *MainWindow) setupMenuBar() {
+	// File menu
+	button := m.builder.getObject("menuFileQuit").(*gtk.MenuItem)
+	_ = button.Connect("activate", m.window.Close)
+
+	// Edit menu
+	button = m.builder.getObject("menuEditExternalApplications").(*gtk.MenuItem)
+	_ = button.Connect("activate", m.openAboutDialog)
+
+	// About menu
+	button = m.builder.getObject("menuHelpAbout").(*gtk.MenuItem)
+	_ = button.Connect("activate", m.openAboutDialog)
 }
 
 func (m *MainWindow) addButtonClicked() {
@@ -332,8 +351,10 @@ func (m *MainWindow) executeCommand(command, path string) {
 	cmd := exec.Command(command, path)
 	// Forces the new process to detach from the GitDiscover process
 	// so that it does not die when GitDiscover dies
+	// https://stackoverflow.com/questions/62853835/how-to-use-syscall-sysprocattr-struct-fields-for-windows-when-os-is-set-for-linu
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		Setpgid: true,
+		Pgid:    0,
 	}
 
 	// set var to get the output
@@ -348,4 +369,29 @@ func (m *MainWindow) executeCommand(command, path string) {
 	}
 
 	fmt.Println(out.String())
+}
+
+func (m *MainWindow) openAboutDialog() {
+	if m.aboutDialog == nil {
+		about := m.builder.getObject("aboutDialog").(*gtk.AboutDialog)
+
+		about.SetDestroyWithParent(true)
+		about.SetTransientFor(m.window)
+		about.SetProgramName(ApplicationTitle)
+		about.SetVersion(ApplicationVersion)
+		about.SetCopyright(ApplicationCopyRight)
+		about.SetComments("Discover your GIT repositories...")
+		about.SetModal(true)
+		about.SetPosition(gtk.WIN_POS_CENTER)
+
+		_ = about.Connect("response", func(dialog *gtk.AboutDialog, responseId gtk.ResponseType) {
+			if responseId == gtk.RESPONSE_CANCEL || responseId == gtk.RESPONSE_DELETE_EVENT {
+				about.Hide()
+			}
+		})
+
+		m.aboutDialog = about
+	}
+
+	m.aboutDialog.ShowAll()
 }
