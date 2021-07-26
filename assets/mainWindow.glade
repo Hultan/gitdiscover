@@ -2,42 +2,6 @@
 <!-- Generated with glade 3.38.2 -->
 <interface>
   <requires lib="gtk+" version="3.20"/>
-  <object class="GtkWindow" id="ExternalApplicationsWindow">
-    <property name="can-focus">False</property>
-    <child>
-      <placeholder/>
-    </child>
-  </object>
-  <object class="GtkAboutDialog" id="aboutDialog">
-    <property name="can-focus">False</property>
-    <property name="type-hint">dialog</property>
-    <property name="program-name">GitDiscover</property>
-    <property name="version">3.4.4</property>
-    <property name="website">http://www.softteam.se</property>
-    <property name="authors">Per Hultqvist</property>
-    <property name="logo">application.png</property>
-    <child internal-child="vbox">
-      <object class="GtkBox">
-        <property name="can-focus">False</property>
-        <property name="orientation">vertical</property>
-        <property name="spacing">2</property>
-        <child internal-child="action_area">
-          <object class="GtkButtonBox">
-            <property name="can-focus">False</property>
-            <property name="layout-style">end</property>
-          </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="fill">False</property>
-            <property name="position">0</property>
-          </packing>
-        </child>
-        <child>
-          <placeholder/>
-        </child>
-      </object>
-    </child>
-  </object>
   <object class="GtkApplicationWindow" id="mainWindow">
     <property name="width-request">1024</property>
     <property name="height-request">768</property>
@@ -91,6 +55,14 @@
                         <property name="label" translatable="yes">External Applications...</property>
                       </object>
                     </child>
+                    <child>
+                      <object class="GtkMenuItem" id="menuEditConfig">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="label" translatable="yes">Config...</property>
+                        <property name="use-underline">True</property>
+                      </object>
+                    </child>
                   </object>
                 </child>
               </object>
@@ -129,13 +101,13 @@
             <property name="visible">True</property>
             <property name="can-focus">False</property>
             <child>
-              <object class="GtkToolButton" id="toolbarRefreshButton">
+              <object class="GtkToolButton" id="toolbarQuitButton">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
                 <property name="is-important">True</property>
-                <property name="label" translatable="yes">Refresh</property>
+                <property name="label" translatable="yes">Quit</property>
                 <property name="use-underline">True</property>
-                <property name="stock-id">gtk-refresh</property>
+                <property name="stock-id">gtk-quit</property>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -143,13 +115,23 @@
               </packing>
             </child>
             <child>
-              <object class="GtkToolButton" id="toolbarOpenConfigButton">
+              <object class="GtkSeparatorToolItem">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">False</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkToolButton" id="toolbarRefreshButton">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
                 <property name="is-important">True</property>
-                <property name="label" translatable="yes">Open config</property>
+                <property name="label" translatable="yes">Refresh</property>
                 <property name="use-underline">True</property>
-                <property name="stock-id">gtk-file</property>
+                <property name="stock-id">gtk-refresh</property>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -188,30 +170,6 @@
                 <property name="label" translatable="yes">Remove</property>
                 <property name="use-underline">True</property>
                 <property name="stock-id">gtk-remove</property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="homogeneous">True</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkSeparatorToolItem">
-                <property name="visible">True</property>
-                <property name="can-focus">False</property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="homogeneous">False</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkToolButton" id="toolbarQuitButton">
-                <property name="visible">True</property>
-                <property name="can-focus">False</property>
-                <property name="is-important">True</property>
-                <property name="label" translatable="yes">Quit</property>
-                <property name="use-underline">True</property>
-                <property name="stock-id">gtk-quit</property>
               </object>
               <packing>
                 <property name="expand">False</property>

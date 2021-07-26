@@ -1,4 +1,7 @@
 .idea
 build
-assets/main.glade~
+assets/mainWindow.glade~
+assets/externalApplicationsWindow.glade~
+assets/externalApplicationWindow.glade~
+assets/aboutDialog.glade~
 logrus.log

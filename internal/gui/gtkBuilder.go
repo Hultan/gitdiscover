@@ -1,28 +1,29 @@
 package gui
 
 import (
-"github.com/gotk3/gotk3/glib"
-"github.com/gotk3/gotk3/gtk"
+	"github.com/gotk3/gotk3/glib"
+	"github.com/gotk3/gotk3/gtk"
 	"github.com/sirupsen/logrus"
 )
 
-type SoftBuilder struct {
+type GtkBuilder struct {
 	builder *gtk.Builder
-	logger *logrus.Logger
+	logger  *logrus.Logger
 }
 
-func SoftBuilderNew(fileName string, logger *logrus.Logger) *SoftBuilder {
-	builder := new(SoftBuilder)
+func NewGtkBuilder(fileName string, logger *logrus.Logger) *GtkBuilder {
+	builder := new(GtkBuilder)
 	builder.createBuilder(fileName)
 	builder.logger = logger
 	return builder
 }
-func (s *SoftBuilder) destroy() {
+
+func (s *GtkBuilder) destroy() {
 	s.builder = nil
 	s.logger = nil
 }
 
-func (s *SoftBuilder) createBuilder(gladeFileName string) {
+func (s *GtkBuilder) createBuilder(gladeFileName string) {
 	gladePath, err := getResourcePath(gladeFileName)
 	if err != nil {
 		s.logger.Error(err)
@@ -38,7 +39,7 @@ func (s *SoftBuilder) createBuilder(gladeFileName string) {
 	s.builder = builder
 }
 
-func (s *SoftBuilder) getObject(name string) glib.IObject {
+func (s *GtkBuilder) getObject(name string) glib.IObject {
 	obj, err := s.builder.GetObject(name)
 	if err != nil {
 		s.logger.Error(err)
@@ -47,5 +48,3 @@ func (s *SoftBuilder) getObject(name string) glib.IObject {
 
 	return obj
 }
-
-

@@ -131,3 +131,14 @@ func (config *Config) CreateEmptyConfig() error {
 	}
 	return nil
 }
+
+func (config *Config) GetExternalApplicationByName(name string) *ExternalApplication {
+	for i := range config.ExternalApplications {
+		ext := config.ExternalApplications[i]
+		if ext.Name == name {
+			return &ext
+		}
+	}
+
+	return nil
+}

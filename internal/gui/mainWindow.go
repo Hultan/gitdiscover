@@ -19,12 +19,11 @@ type MainWindow struct {
 	logger *logrus.Logger
 	config *gitConfig.Config
 
-	builder           *SoftBuilder
-	window            *gtk.ApplicationWindow
-	repositoryListBox *gtk.ListBox
-	repositories      []gitdiscover.RepositoryStatus
-	terminalOrNemo    *gtk.ToggleToolButton
-	aboutDialog       *gtk.AboutDialog
+	builder                    *GtkBuilder
+	window                     *gtk.ApplicationWindow
+	repositoryListBox          *gtk.ListBox
+	repositories               []gitdiscover.RepositoryStatus
+	terminalOrNemo             *gtk.ToggleToolButton
 }
 
 // NewMainWindow : Creates a new MainWindow object
@@ -41,7 +40,7 @@ func (m *MainWindow) OpenMainWindow(app *gtk.Application) {
 	gtk.Init(&os.Args)
 
 	// Create a new softBuilder
-	m.builder = SoftBuilderNew("main.glade", m.logger)
+	m.builder = NewGtkBuilder("mainWindow.glade", m.logger)
 
 	// Get the main window from the glade file
 	m.window = m.builder.getObject("mainWindow").(*gtk.ApplicationWindow)
@@ -78,6 +77,7 @@ func (m *MainWindow) closeMainWindow() {
 	m.repositoryListBox = nil
 	m.repositories = nil
 	m.terminalOrNemo = nil
+	m.window.Destroy()
 	m.window = nil
 	m.builder.destroy()
 	m.builder = nil
@@ -100,10 +100,6 @@ func (m *MainWindow) setupToolBar() {
 	button = m.builder.getObject("toolbarRefreshButton").(*gtk.ToolButton)
 	_ = button.Connect("clicked", m.refreshRepositoryList)
 
-	// Open config button
-	button = m.builder.getObject("toolbarOpenConfigButton").(*gtk.ToolButton)
-	_ = button.Connect("clicked", m.openConfigButtonClicked)
-
 	// Terminal/Nemo/GoLand buttons
 	button = m.builder.getObject("toolbarTerminal").(*gtk.ToolButton)
 	_ = button.Connect("clicked", m.openInTerminalButtonClicked)
@@ -120,7 +116,9 @@ func (m *MainWindow) setupMenuBar() {
 
 	// Edit menu
 	button = m.builder.getObject("menuEditExternalApplications").(*gtk.MenuItem)
-	_ = button.Connect("activate", m.openAboutDialog)
+	_ = button.Connect("activate", m.openExternalToolsDialog)
+	button = m.builder.getObject("menuEditConfig").(*gtk.MenuItem)
+	_ = button.Connect("activate", m.openConfig)
 
 	// About menu
 	button = m.builder.getObject("menuHelpAbout").(*gtk.MenuItem)
@@ -188,7 +186,7 @@ func (m *MainWindow) refreshRepositoryList() {
 	// Fill list
 	for i := range m.repositories {
 		repo := m.repositories[i]
-		listItem := m.createListBoxItem(i, m.config.DateFormat, repo)
+		listItem := m.createListItem(i, m.config.DateFormat, repo)
 		m.repositoryListBox.Add(listItem)
 	}
 	m.repositoryListBox.ShowAll()
@@ -208,7 +206,7 @@ func (m *MainWindow) clearList() {
 	}
 }
 
-func (m *MainWindow) createListBoxItem(index int, dateFormat string, repo gitdiscover.RepositoryStatus) *gtk.Box {
+func (m *MainWindow) createListItem(index int, dateFormat string, repo gitdiscover.RepositoryStatus) *gtk.Box {
 	// Create main box
 	box, err := gtk.BoxNew(gtk.ORIENTATION_HORIZONTAL, 10)
 	if err != nil {
@@ -294,7 +292,7 @@ func (m *MainWindow) getSelectedRepo() *gitdiscover.RepositoryStatus {
 	return &repo
 }
 
-func (m *MainWindow) openConfigButtonClicked() {
+func (m *MainWindow) openConfig() {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		m.logger.Error("Failed to get user home dir", err)
@@ -372,26 +370,11 @@ func (m *MainWindow) executeCommand(command, path string) {
 }
 
 func (m *MainWindow) openAboutDialog() {
-	if m.aboutDialog == nil {
-		about := m.builder.getObject("aboutDialog").(*gtk.AboutDialog)
+	about := NewAboutDialog(m.logger, m.window)
+	about.openAboutDialog()
+}
 
-		about.SetDestroyWithParent(true)
-		about.SetTransientFor(m.window)
-		about.SetProgramName(ApplicationTitle)
-		about.SetVersion(ApplicationVersion)
-		about.SetCopyright(ApplicationCopyRight)
-		about.SetComments("Discover your GIT repositories...")
-		about.SetModal(true)
-		about.SetPosition(gtk.WIN_POS_CENTER)
-
-		_ = about.Connect("response", func(dialog *gtk.AboutDialog, responseId gtk.ResponseType) {
-			if responseId == gtk.RESPONSE_CANCEL || responseId == gtk.RESPONSE_DELETE_EVENT {
-				about.Hide()
-			}
-		})
-
-		m.aboutDialog = about
-	}
-
-	m.aboutDialog.ShowAll()
+func (m *MainWindow) openExternalToolsDialog() {
+	window := NewExternalApplicationsWindow(m.logger, m.config)
+	window.openWindow()
 }
