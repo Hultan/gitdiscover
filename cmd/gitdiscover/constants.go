@@ -12,4 +12,5 @@ const (
 const (
 	ApplicationId    = "se.softteam.gitdiscover"
 	ApplicationFlags = glib.APPLICATION_FLAGS_NONE
+	ApplicationLogPath   = "/tmp/gitdiscover.log"
 )

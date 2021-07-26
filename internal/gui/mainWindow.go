@@ -16,6 +16,8 @@ import (
 )
 
 type MainWindow struct {
+	ApplicationLogPath string
+
 	logger *logrus.Logger
 	config *gitConfig.Config
 
@@ -113,6 +115,8 @@ func (m *MainWindow) setupMenuBar() {
 	_ = button.Connect("activate", m.openExternalToolsDialog)
 	button = m.builder.getObject("menuEditConfig").(*gtk.MenuItem)
 	_ = button.Connect("activate", m.openConfig)
+	button = m.builder.getObject("menuEditLog").(*gtk.MenuItem)
+	_ = button.Connect("activate", m.openLog)
 
 	// About menu
 	button = m.builder.getObject("menuHelpAbout").(*gtk.MenuItem)
@@ -293,31 +297,11 @@ func (m *MainWindow) openConfig() {
 		return
 	}
 
-	m.executeCommand("xed", path.Join(homeDir, ".config/softteam/gitdiscover/config.json"))
+	m.executeCommand("xed", path.Join(homeDir, m.config.GetConfigPath()))
 }
 
-func (m *MainWindow) openInTerminalButtonClicked() {
-	repo := m.getSelectedRepo()
-	if repo == nil {
-		return
-	}
-	m.openInExternalApplication("Terminal", repo)
-}
-
-func (m *MainWindow) openInNemoButtonClicked() {
-	repo := m.getSelectedRepo()
-	if repo == nil {
-		return
-	}
-	m.openInExternalApplication("Nemo", repo)
-}
-
-func (m *MainWindow) openInGolandButtonClicked() {
-	repo := m.getSelectedRepo()
-	if repo == nil {
-		return
-	}
-	m.openInExternalApplication("GoLand", repo)
+func (m *MainWindow) openLog() {
+	m.executeCommand("xed", m.ApplicationLogPath)
 }
 
 func (m *MainWindow) openInExternalApplication(name string, repo *gitdiscover.RepositoryStatus) {
