@@ -97,7 +97,7 @@
           </packing>
         </child>
         <child>
-          <object class="GtkToolbar">
+          <object class="GtkToolbar" id="toolbar">
             <property name="visible">True</property>
             <property name="can-focus">False</property>
             <child>
@@ -183,45 +183,6 @@
               </object>
               <packing>
                 <property name="expand">True</property>
-                <property name="homogeneous">True</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkToolButton" id="toolbarTerminal">
-                <property name="visible">True</property>
-                <property name="can-focus">False</property>
-                <property name="tooltip-text" translatable="yes">Open folder in gnome-terminal...</property>
-                <property name="label" translatable="yes">Terminal</property>
-                <property name="use-underline">True</property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="homogeneous">True</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkToolButton" id="toolbarNemo">
-                <property name="visible">True</property>
-                <property name="can-focus">False</property>
-                <property name="tooltip-text" translatable="yes">Open folder in Nemo...</property>
-                <property name="label" translatable="yes">Nemo</property>
-                <property name="use-underline">True</property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="homogeneous">True</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkToolButton" id="toolbarGoland">
-                <property name="visible">True</property>
-                <property name="can-focus">False</property>
-                <property name="tooltip-text" translatable="yes">Open folder in GoLand...</property>
-                <property name="label" translatable="yes">GoLand</property>
-                <property name="use-underline">True</property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
                 <property name="homogeneous">True</property>
               </packing>
             </child>

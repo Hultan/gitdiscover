@@ -100,13 +100,7 @@ func (m *MainWindow) setupToolBar() {
 	button = m.builder.getObject("toolbarRefreshButton").(*gtk.ToolButton)
 	_ = button.Connect("clicked", m.refreshRepositoryList)
 
-	// Terminal/Nemo/GoLand buttons
-	button = m.builder.getObject("toolbarTerminal").(*gtk.ToolButton)
-	_ = button.Connect("clicked", m.openInTerminalButtonClicked)
-	button = m.builder.getObject("toolbarNemo").(*gtk.ToolButton)
-	_ = button.Connect("clicked", m.openInNemoButtonClicked)
-	button = m.builder.getObject("toolbarGoland").(*gtk.ToolButton)
-	_ = button.Connect("clicked", m.openInGolandButtonClicked)
+	m.refreshExternalApplications(m.builder.getObject("toolbar").(*gtk.Toolbar))
 }
 
 func (m *MainWindow) setupMenuBar() {
@@ -329,6 +323,7 @@ func (m *MainWindow) openInGolandButtonClicked() {
 func (m *MainWindow) openInExternalApplication(name string, repo *gitdiscover.RepositoryStatus) {
 	opened := false
 
+	// TODO : Should this funcction use getApplicationByName instead?
 	for _, openIn := range m.config.ExternalApplications {
 		if openIn.Name == name {
 			argument := strings.Replace(openIn.Argument, "%PATH%", repo.Path, -1)
@@ -377,4 +372,30 @@ func (m *MainWindow) openAboutDialog() {
 func (m *MainWindow) openExternalToolsDialog() {
 	window := NewExternalApplicationsWindow(m.logger, m.config)
 	window.openWindow()
+}
+
+func (m *MainWindow) refreshExternalApplications(toolbar *gtk.Toolbar) {
+	for i := 0; i < len(m.config.ExternalApplications); i++ {
+		app:=m.config.ExternalApplications[i]
+		toolButton, err := gtk.ToolButtonNew(nil,app.Name)
+		if err != nil {
+			m.logger.Error(err)
+			panic(err)
+		}
+		toolButton.SetName(app.Name)
+		toolButton.Connect("clicked", func(button *gtk.ToolButton) {
+			name, err := button.GetName()
+			if err != nil {
+				m.logger.Error(err)
+				return
+			}
+			repo := m.getSelectedRepo()
+			if repo == nil {
+				m.logger.Error("repo not found when clicking application '", name, "'")
+				return
+			}
+			m.openInExternalApplication(name, repo)
+		})
+		toolbar.Add(toolButton)
+	}
 }
