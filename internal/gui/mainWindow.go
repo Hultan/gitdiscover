@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"sort"
 	"strings"
 	"syscall"
 )
@@ -21,11 +22,12 @@ type MainWindow struct {
 	logger *logrus.Logger
 	config *gitConfig.Config
 
-	builder                    *GtkBuilder
-	window                     *gtk.ApplicationWindow
-	repositoryListBox          *gtk.ListBox
-	repositories               []gitdiscover.RepositoryStatus
-	terminalOrNemo             *gtk.ToggleToolButton
+	builder           *GtkBuilder
+	window            *gtk.ApplicationWindow
+	repositoryListBox *gtk.ListBox
+	repositories      []gitdiscover.RepositoryStatus
+	terminalOrNemo    *gtk.ToggleToolButton
+	infoBar           *InfoBar
 }
 
 // NewMainWindow : Creates a new MainWindow object
@@ -42,7 +44,7 @@ func (m *MainWindow) OpenMainWindow(app *gtk.Application) {
 	gtk.Init(&os.Args)
 
 	// Create a new softBuilder
-	m.builder = NewGtkBuilder("mainWindow.glade", m.logger)
+	m.builder = NewGtkBuilder("mainWindow.ui", m.logger)
 
 	// Get the main window from the glade file
 	m.window = m.builder.getObject("mainWindow").(*gtk.ApplicationWindow)
@@ -62,6 +64,11 @@ func (m *MainWindow) OpenMainWindow(app *gtk.Application) {
 	lblInformation := m.builder.getObject("lblApplicationInfo").(*gtk.Label)
 	lblInformation.SetText(fmt.Sprintf("%s %s - %s", ApplicationTitle, ApplicationVersion, ApplicationCopyRight))
 
+	// Info bar
+	infoBar := m.builder.getObject("infoBar").(*gtk.InfoBar)
+	labelInfoBar := m.builder.getObject("labelInfoBar").(*gtk.Label)
+	m.infoBar = NewInfoBar(infoBar, labelInfoBar)
+
 	// Repository list box
 	m.repositoryListBox = m.builder.getObject("repositoryListBox").(*gtk.ListBox)
 
@@ -70,6 +77,7 @@ func (m *MainWindow) OpenMainWindow(app *gtk.Application) {
 
 	// Show the main window
 	m.window.ShowAll()
+	m.infoBar.hideInfoBar()
 }
 
 func (m *MainWindow) closeMainWindow() {
@@ -179,6 +187,17 @@ func (m *MainWindow) refreshRepositoryList() {
 		m.logger.Panic(err)
 		panic(err)
 	}
+
+	// Sort the git status string after modified date of the .git folder
+	sort.Slice(repos, func(i, j int) bool {
+		date1 := repos[i].Date
+		date2 := repos[j].Date
+		if date1 == nil || date2 == nil {
+			return false
+		}
+		return (*date1).After(*date2)
+	})
+
 	m.repositories = repos
 
 	// Fill list
@@ -188,6 +207,7 @@ func (m *MainWindow) refreshRepositoryList() {
 		m.repositoryListBox.Add(listItem)
 	}
 	m.repositoryListBox.ShowAll()
+	m.infoBar.hideInfoBar()
 }
 
 func (m *MainWindow) clearList() {
@@ -279,11 +299,21 @@ func (m *MainWindow) createListItem(index int, dateFormat string, repo gitdiscov
 
 func (m *MainWindow) getSelectedRepo() *gitdiscover.RepositoryStatus {
 	row := m.repositoryListBox.GetSelectedRow()
-	index := row.GetIndex()
-	if index == -1 {
-		// TODO : MessageBox "Pleade select a repo!"
+
+	if row == nil {
+		text := "Please select a repository in the list below..."
+		m.infoBar.ShowInfo(text)
+		m.logger.Info(text)
 		return nil
 	}
+	index := row.GetIndex()
+	if index <0 || index >=len(m.repositories) {
+		text := "Please select a repository in the list below..."
+		m.infoBar.ShowInfo(text)
+		m.logger.Info(text)
+		return nil
+	}
+	m.infoBar.hideInfoBar()
 	repo := m.repositories[index]
 	repo.Path = strings.Trim(repo.Path, " ")
 
@@ -291,13 +321,7 @@ func (m *MainWindow) getSelectedRepo() *gitdiscover.RepositoryStatus {
 }
 
 func (m *MainWindow) openConfig() {
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		m.logger.Error("Failed to get user home dir", err)
-		return
-	}
-
-	m.executeCommand("xed", path.Join(homeDir, m.config.GetConfigPath()))
+	m.executeCommand("xed", m.config.GetConfigPath())
 }
 
 func (m *MainWindow) openLog() {
@@ -305,27 +329,30 @@ func (m *MainWindow) openLog() {
 }
 
 func (m *MainWindow) openInExternalApplication(name string, repo *gitdiscover.RepositoryStatus) {
-	opened := false
-
-	// TODO : Should this funcction use getApplicationByName instead?
-	for _, openIn := range m.config.ExternalApplications {
-		if openIn.Name == name {
-			argument := strings.Replace(openIn.Argument, "%PATH%", repo.Path, -1)
-			argument = strings.Replace(argument, "%IMAGEPATH%", repo.ImagePath, -1)
-			m.executeCommand(openIn.Command, argument)
-			opened = true
-			break
-		}
+	// Find application
+	app := m.config.GetExternalApplicationByName(name)
+	if app == nil {
+		// Failed to find application, show info bar.
+		// This should not happen, but if there is an issue
+		// with when the external application buttons are
+		// refreshed, then it can happen.
+		text := fmt.Sprintf("Failed to find an application with name : %s", name)
+		m.infoBar.ShowError(text)
+		m.logger.Error(text)
+		return
 	}
+	m.infoBar.hideInfoBar()
 
-	if !opened {
-		m.logger.Error("Failed to open external application")
-	}
+	// Open external application
+	argument := strings.Replace(app.Argument, "%PATH%", repo.Path, -1)
+	argument = strings.Replace(argument, "%IMAGEPATH%", repo.ImagePath, -1)
+	m.logger.Info("Opened external application: ", app.Command, " ", argument)
+	m.executeCommand(app.Command, argument)
 }
 
-func (m *MainWindow) executeCommand(command, path string) {
+func (m *MainWindow) executeCommand(command, arguments string) {
 
-	cmd := exec.Command(command, path)
+	cmd := exec.Command(command, arguments)
 	// Forces the new process to detach from the GitDiscover process
 	// so that it does not die when GitDiscover dies
 	// https://stackoverflow.com/questions/62853835/how-to-use-syscall-sysprocattr-struct-fields-for-windows-when-os-is-set-for-linu
@@ -341,6 +368,7 @@ func (m *MainWindow) executeCommand(command, path string) {
 	cmd.Stdout = &out
 	err := cmd.Start()
 	if err != nil {
+		m.logger.Error("Failed to open external application: ", command, " ", arguments)
 		m.logger.Error(err)
 		return
 	}
@@ -360,8 +388,8 @@ func (m *MainWindow) openExternalToolsDialog() {
 
 func (m *MainWindow) refreshExternalApplications(toolbar *gtk.Toolbar) {
 	for i := 0; i < len(m.config.ExternalApplications); i++ {
-		app:=m.config.ExternalApplications[i]
-		toolButton, err := gtk.ToolButtonNew(nil,app.Name)
+		app := m.config.ExternalApplications[i]
+		toolButton, err := gtk.ToolButtonNew(nil, app.Name)
 		if err != nil {
 			m.logger.Error(err)
 			panic(err)

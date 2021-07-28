@@ -24,7 +24,7 @@ func NewExternalApplicationsWindow(logger *logrus.Logger, config *config.Config)
 
 func (e *ExternalApplicationsWindow) openWindow() {
 	// Create a new softBuilder
-	e.builder = NewGtkBuilder("externalApplicationsWindow.glade", e.logger)
+	e.builder = NewGtkBuilder("externalApplicationsWindow.ui", e.logger)
 
 	window := e.builder.getObject("externalApplicationsWindow").(*gtk.Window)
 	window.Connect("destroy", window.Destroy)

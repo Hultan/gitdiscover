@@ -21,7 +21,7 @@ func NewAboutDialog(logger *logrus.Logger, parent *gtk.ApplicationWindow) *about
 func (m *aboutDialog) openAboutDialog() {
 	if m.dialog == nil {
 		// Create a new softBuilder
-		builder := NewGtkBuilder("about.glade", m.logger)
+		builder := NewGtkBuilder("about.ui", m.logger)
 		about := builder.getObject("aboutDialog").(*gtk.AboutDialog)
 
 		about.SetDestroyWithParent(true)
