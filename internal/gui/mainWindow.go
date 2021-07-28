@@ -12,6 +12,7 @@ import (
 	"os/exec"
 	"path"
 	"sort"
+	"strconv"
 	"strings"
 	"syscall"
 )
@@ -192,6 +193,15 @@ func (m *MainWindow) refreshRepositoryList() {
 
 	// Sort the git status string after modified date of the .git folder
 	sort.Slice(repos, func(i, j int) bool {
+		// Make sure that non-git dirs sorts last
+		if repos[i].Status == "" {
+			return false
+		}
+		if repos[j].Status == "" {
+			return true
+		}
+
+		// Sort by date
 		date1 := repos[i].Date
 		date2 := repos[j].Date
 		if date1 == nil || date2 == nil {
@@ -202,12 +212,29 @@ func (m *MainWindow) refreshRepositoryList() {
 
 	m.repositories = repos
 
+	sgDate, _ := gtk.SizeGroupNew(gtk.SIZE_GROUP_BOTH)
+
 	// Fill list
 	for i := range m.repositories {
 		repo := m.repositories[i]
-		listItem := m.createListItem(i, m.config.DateFormat, repo)
+		listItem := m.createListItem(i, m.config.DateFormat, repo, sgDate)
 		m.repositoryListBox.Add(listItem)
 	}
+	sepItem := m.createListSeparator("GIT REPOSITORIES")
+	m.repositoryListBox.Insert(sepItem, 0)
+
+	var index = -1
+	for i, repo := range repos {
+		if repo.Status == "" {
+			index = i
+		}
+	}
+
+	if index != -1 {
+		sepItem = m.createListSeparator("MISC FOLDERS")
+		m.repositoryListBox.Insert(sepItem, index + 1)
+	}
+
 	m.repositoryListBox.ShowAll()
 	m.infoBar.hideInfoBar()
 }
@@ -226,7 +253,30 @@ func (m *MainWindow) clearList() {
 	}
 }
 
-func (m *MainWindow) createListItem(index int, dateFormat string, repo gitdiscover.RepositoryStatus) *gtk.Box {
+func (m *MainWindow) createListSeparator(text string) *gtk.Box {
+	// Create main box
+	box, err := gtk.BoxNew(gtk.ORIENTATION_HORIZONTAL, 10)
+	if err != nil {
+		m.logger.Panic(err)
+		panic(err)
+	}
+	box.SetName("sep")
+
+	// Date
+	label, err := gtk.LabelNew("")
+	if err != nil {
+		m.logger.Panic(err)
+		panic(err)
+	}
+	label.SetMarkup(`<span font="Sans Regular 14" foreground="#DDDD00">` + text + `</span>`)
+	box.PackStart(label, true, true, 10)
+
+	return box
+}
+
+func (m *MainWindow) createListItem(index int, dateFormat string, repo gitdiscover.RepositoryStatus,
+	sgDate *gtk.SizeGroup) *gtk.Box {
+
 	// Create main box
 	box, err := gtk.BoxNew(gtk.ORIENTATION_HORIZONTAL, 10)
 	if err != nil {
@@ -265,13 +315,14 @@ func (m *MainWindow) createListItem(index int, dateFormat string, repo gitdiscov
 	}
 	var text = ""
 	if repo.Date == nil {
-		text = `<span font="Sans Regular 10" foreground="#DD4444">No date!                    </span>`
+		text = `<span font="Sans Regular 10" foreground="#DD4444"></span>`
 	} else {
 		text = `<span font="Sans Regular 10" foreground="#DD4444">` + repo.Date.Format(dateFormat) + `</span>`
 	}
 	label.SetMarkup(text)
 	label.SetName("lblDate")
-	label.SetHAlign(gtk.ALIGN_START)
+	sgDate.AddWidget(label)
+	label.SetXAlign(0.0)
 	box.PackStart(label, false, false, 10)
 
 	// Status
@@ -301,21 +352,30 @@ func (m *MainWindow) createListItem(index int, dateFormat string, repo gitdiscov
 
 func (m *MainWindow) getSelectedRepo() *gitdiscover.RepositoryStatus {
 	row := m.repositoryListBox.GetSelectedRow()
-
-	if row == nil {
-		text := "Please select a repository in the list below..."
-		m.infoBar.ShowInfo(text)
-		m.logger.Info(text)
+	boxObj, err := row.GetChild()
+	if err != nil {
+		m.infoBar.ShowError(err.Error())
 		return nil
 	}
-	index := row.GetIndex()
-	if index < 0 || index >= len(m.repositories) {
-		text := "Please select a repository in the list below..."
-		m.infoBar.ShowInfo(text)
-		m.logger.Info(text)
+	box, ok := boxObj.(*gtk.Box)
+	if !ok {
+		m.infoBar.ShowError("Failed to convert to *gtk.Widget")
 		return nil
 	}
-	m.infoBar.hideInfoBar()
+	name, err := box.GetName()
+	if err != nil {
+		m.infoBar.ShowError(err.Error())
+		return nil
+	}
+	if name=="sep" {
+		return nil
+	}
+	indexString := name[4:]
+	index, err := strconv.Atoi(indexString)
+	if err != nil {
+		m.infoBar.ShowError(err.Error())
+		return nil
+	}
 	repo := m.repositories[index]
 	repo.Path = strings.Trim(repo.Path, " ")
 
@@ -346,9 +406,14 @@ func (m *MainWindow) openInExternalApplication(name string, repo *gitdiscover.Re
 	m.infoBar.hideInfoBar()
 
 	// Open external application
-	argument := strings.Replace(app.Argument, "%PATH%", repo.Path, -1)
-	argument = strings.Replace(argument, "%IMAGEPATH%", repo.ImagePath, -1)
-	m.logger.Info("Opened external application: ", app.Command, " ", argument)
+	var argument = ""
+
+	if repo != nil {
+		argument = strings.Replace(app.Argument, "%PATH%", repo.Path, -1)
+		argument = strings.Replace(argument, "%IMAGEPATH%", repo.ImagePath, -1)
+	}
+
+	m.logger.Info("Trying to open external application: ", app.Command, " ", argument)
 	m.executeCommand(app.Command, argument)
 }
 
@@ -372,10 +437,9 @@ func (m *MainWindow) executeCommand(command, arguments string) {
 	if err != nil {
 		m.logger.Error("Failed to open external application: ", command, " ", arguments)
 		m.logger.Error(err)
+		m.infoBar.ShowError(err.Error())
 		return
 	}
-
-	fmt.Println(out.String())
 }
 
 func (m *MainWindow) openAboutDialog() {
@@ -428,7 +492,6 @@ func (m *MainWindow) refreshExternalApplications(toolbar *gtk.Toolbar) {
 			repo := m.getSelectedRepo()
 			if repo == nil {
 				m.logger.Error("repo not found when clicking application '", appName, "'")
-				return
 			}
 			m.openInExternalApplication(appName, repo)
 		})

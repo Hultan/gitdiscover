@@ -39,8 +39,8 @@ func (g *Git) GetRepositories() ([]RepositoryStatus, error) {
 		status := RepositoryStatus{Path: basePath, ImagePath: repo.ImagePath}
 
 		if _, err := os.Stat(gitPath); os.IsNotExist(err) {
-			status.Date = nil
-			status.Status = "Not a git directory!"
+			status.Date = g.getModifiedDate(basePath)
+			status.Status = ""
 		} else {
 			gs := g.getGitStatus(basePath)
 			status.Date = g.getModifiedDate(basePath)
