@@ -8,6 +8,10 @@
     <child>
       <object class="GtkBox">
         <property name="can-focus">False</property>
+        <property name="margin-start">5</property>
+        <property name="margin-end">5</property>
+        <property name="margin-top">5</property>
+        <property name="margin-bottom">5</property>
         <property name="orientation">vertical</property>
         <property name="spacing">2</property>
         <child>
@@ -89,7 +93,6 @@
             </child>
             <child>
               <object class="GtkLabel">
-                <property name="visible">True</property>
                 <property name="can-focus">False</property>
                 <property name="halign">start</property>
                 <property name="margin-top">10</property>
@@ -108,9 +111,9 @@
                 <child>
                   <object class="GtkRadioButton" id="buttonRadioButton">
                     <property name="label" translatable="yes">Show as a button</property>
-                    <property name="visible">True</property>
                     <property name="can-focus">True</property>
                     <property name="receives-default">False</property>
+                    <property name="halign">start</property>
                     <property name="margin-top">10</property>
                     <property name="active">True</property>
                     <property name="draw-indicator">True</property>
@@ -125,9 +128,9 @@
                 <child>
                   <object class="GtkRadioButton" id="listRadioButton">
                     <property name="label" translatable="yes">Show in list</property>
-                    <property name="visible">True</property>
                     <property name="can-focus">True</property>
                     <property name="receives-default">False</property>
+                    <property name="halign">start</property>
                     <property name="active">True</property>
                     <property name="draw-indicator">True</property>
                     <property name="group">buttonRadioButton</property>

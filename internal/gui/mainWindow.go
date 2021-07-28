@@ -28,6 +28,7 @@ type MainWindow struct {
 	repositories      []gitdiscover.RepositoryStatus
 	terminalOrNemo    *gtk.ToggleToolButton
 	infoBar           *InfoBar
+	toolBar           *gtk.Toolbar
 }
 
 // NewMainWindow : Creates a new MainWindow object
@@ -55,6 +56,7 @@ func (m *MainWindow) OpenMainWindow(app *gtk.Application) {
 	_ = m.window.Connect("destroy", m.closeMainWindow)
 
 	// Toolbar
+	m.toolBar = m.builder.getObject("toolbar").(*gtk.Toolbar)
 	m.setupToolBar()
 
 	// MenuBar
@@ -110,7 +112,7 @@ func (m *MainWindow) setupToolBar() {
 	button = m.builder.getObject("toolbarRefreshButton").(*gtk.ToolButton)
 	_ = button.Connect("clicked", m.refreshRepositoryList)
 
-	m.refreshExternalApplications(m.builder.getObject("toolbar").(*gtk.Toolbar))
+	m.refreshExternalApplications(m.toolBar)
 }
 
 func (m *MainWindow) setupMenuBar() {
@@ -307,7 +309,7 @@ func (m *MainWindow) getSelectedRepo() *gitdiscover.RepositoryStatus {
 		return nil
 	}
 	index := row.GetIndex()
-	if index <0 || index >=len(m.repositories) {
+	if index < 0 || index >= len(m.repositories) {
 		text := "Please select a repository in the list below..."
 		m.infoBar.ShowInfo(text)
 		m.logger.Info(text)
@@ -383,10 +385,31 @@ func (m *MainWindow) openAboutDialog() {
 
 func (m *MainWindow) openExternalToolsDialog() {
 	window := NewExternalApplicationsWindow(m.logger, m.config)
-	window.openWindow()
+	window.openWindow(func() {
+		m.refreshExternalApplications(m.toolBar)
+	})
 }
 
 func (m *MainWindow) refreshExternalApplications(toolbar *gtk.Toolbar) {
+	children := toolbar.GetChildren()
+	if children.Length() > 0 {
+		var i uint
+		for i = 0; i < children.Length(); i++ {
+			child := children.NthData(i)
+			toolButton, ok := child.(*gtk.Widget)
+			if ok {
+				name, err := toolButton.GetName()
+				if err != nil {
+					m.logger.Error(err)
+					return
+				}
+				if name[:3] == "ea_" {
+					toolbar.Remove(toolButton)
+				}
+			}
+		}
+	}
+
 	for i := 0; i < len(m.config.ExternalApplications); i++ {
 		app := m.config.ExternalApplications[i]
 		toolButton, err := gtk.ToolButtonNew(nil, app.Name)
@@ -394,20 +417,22 @@ func (m *MainWindow) refreshExternalApplications(toolbar *gtk.Toolbar) {
 			m.logger.Error(err)
 			panic(err)
 		}
-		toolButton.SetName(app.Name)
+		toolButton.SetName("ea_" + app.Name)
 		toolButton.Connect("clicked", func(button *gtk.ToolButton) {
 			name, err := button.GetName()
 			if err != nil {
 				m.logger.Error(err)
 				return
 			}
+			appName := name[3:]
 			repo := m.getSelectedRepo()
 			if repo == nil {
-				m.logger.Error("repo not found when clicking application '", name, "'")
+				m.logger.Error("repo not found when clicking application '", appName, "'")
 				return
 			}
-			m.openInExternalApplication(name, repo)
+			m.openInExternalApplication(appName, repo)
 		})
 		toolbar.Add(toolButton)
 	}
+	toolbar.ShowAll()
 }

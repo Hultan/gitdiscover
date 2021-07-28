@@ -1,7 +1,6 @@
 package gui
 
 import (
-	"fmt"
 	"github.com/gotk3/gotk3/gtk"
 	"github.com/hultan/gitdiscover/internal/config"
 	"github.com/sirupsen/logrus"
@@ -13,7 +12,9 @@ type ExternalApplicationsWindow struct {
 	config  *config.Config
 	logger  *logrus.Logger
 	listBox *gtk.ListBox
+	refresh func()
 }
+
 
 func NewExternalApplicationsWindow(logger *logrus.Logger, config *config.Config) *ExternalApplicationsWindow {
 	window := new(ExternalApplicationsWindow)
@@ -22,12 +23,12 @@ func NewExternalApplicationsWindow(logger *logrus.Logger, config *config.Config)
 	return window
 }
 
-func (e *ExternalApplicationsWindow) openWindow() {
+func (e *ExternalApplicationsWindow) openWindow(refresh func()) {
 	// Create a new softBuilder
 	e.builder = NewGtkBuilder("externalApplicationsWindow.ui", e.logger)
 
 	window := e.builder.getObject("externalApplicationsWindow").(*gtk.Window)
-	window.Connect("destroy", window.Destroy)
+	window.Connect("destroy", e.closeWindow)
 	window.SetTitle("External Applications...")
 	window.HideOnDelete()
 	window.SetModal(true)
@@ -35,7 +36,7 @@ func (e *ExternalApplicationsWindow) openWindow() {
 	window.SetPosition(gtk.WIN_POS_CENTER_ALWAYS)
 
 	button := e.builder.getObject("closeButton").(*gtk.Button)
-	button.Connect("clicked", window.Hide)
+	button.Connect("clicked", e.closeWindow)
 
 	// Toolbar
 	tool := e.builder.getObject("toolbarAddApplication").(*gtk.ToolButton)
@@ -46,17 +47,33 @@ func (e *ExternalApplicationsWindow) openWindow() {
 	tool.Connect("clicked", e.editExternalApplication)
 
 	e.listBox = e.builder.getObject("externalApplicationsList").(*gtk.ListBox)
+	e.listBox.SetActivateOnSingleClick(false)
+	e.listBox.Connect("row-activated", func(listbox *gtk.ListBox, row *gtk.ListBoxRow) {
+		index := row.GetIndex()
+		e.editExternalApplicationByIndex(index)
+	})
+
 	e.fillExternalApplicationsList()
 
 	e.window = window
+	e.refresh = refresh
 	window.ShowAll()
+}
+
+func (e *ExternalApplicationsWindow) closeWindow() {
+	e.window.Hide()
+	e.refresh()
 }
 
 func (e *ExternalApplicationsWindow) fillExternalApplicationsList() {
 	e.clearListBox()
 
+	sgName, _ := gtk.SizeGroupNew(gtk.SIZE_GROUP_BOTH)
+	sgCommand, _ := gtk.SizeGroupNew(gtk.SIZE_GROUP_BOTH)
+	sgArgument, _ := gtk.SizeGroupNew(gtk.SIZE_GROUP_BOTH)
+
 	for _, application := range e.config.ExternalApplications {
-		item := e.createListItem(application)
+		item := e.createListItem(application, sgName, sgCommand, sgArgument)
 		e.listBox.Add(item)
 	}
 
@@ -93,12 +110,16 @@ func (e *ExternalApplicationsWindow) removeExternalApplication() {
 }
 
 func (e *ExternalApplicationsWindow) editExternalApplication() {
-	dialog := NewExternalApplicationDialog(e.logger, e.config)
 	_, index := e.getSelectedApplication()
 	if index == -1 {
 		// TODO Please select an application
 		return
 	}
+	e.editExternalApplicationByIndex(index)
+}
+
+func (e *ExternalApplicationsWindow) editExternalApplicationByIndex(index int) {
+	dialog := NewExternalApplicationDialog(e.logger, e.config)
 	dialog.externalApplication = e.config.ExternalApplications[index]
 	dialog.mode = modeEdit
 	dialog.openDialog(e.window, func() bool {
@@ -125,42 +146,48 @@ func (e *ExternalApplicationsWindow) clearListBox() {
 	}
 }
 
-func (e *ExternalApplicationsWindow) createListItem(application config.ExternalApplication) *gtk.Box {
+func (e *ExternalApplicationsWindow) createListItem(application config.ExternalApplication,
+	sgName, sgCommand, sgArgument *gtk.SizeGroup) *gtk.Box {
+
 	box, err := gtk.BoxNew(gtk.ORIENTATION_HORIZONTAL, 10)
 	if err != nil {
 		e.logger.Error(err)
 		panic(err)
 	}
 
+	// Name
 	labelName, err := gtk.LabelNew("")
 	if err != nil {
 		e.logger.Error(err)
 		panic(err)
 	}
-	labelName.SetHAlign(gtk.ALIGN_START)
-	applicationName := `<span font="Sans Regular 10" foreground="#44DD44">` + fmt.Sprintf("%-40s", application.Name) + `</span>`
+	applicationName := `<span font="Sans Regular 10" foreground="#44DD44">` + application.Name + `</span>`
 	labelName.SetMarkup(applicationName)
-	box.PackStart(labelName, false, false, 10)
+	labelName.SetXAlign(0.0)
+	sgName.AddWidget(labelName)
+	box.PackStart(labelName, true, true, 10)
 
+	// Command
 	labelCommand, err := gtk.LabelNew("")
 	if err != nil {
 		e.logger.Error(err)
 		panic(err)
 	}
-	labelCommand.SetHAlign(gtk.ALIGN_START)
-	applicationCommand := `<span font="Sans Regular 10" foreground="#FFFFFF">` + application.Command + `</span>`
-	labelCommand.SetMarkup(applicationCommand)
-	box.PackStart(labelCommand, false, false, 10)
+	labelCommand.SetText(application.Command)
+	labelCommand.SetXAlign(0.0)
+	sgCommand.AddWidget(labelCommand)
+	box.PackStart(labelCommand, true, true, 10)
 
+	// Argument
 	labelArgument, err := gtk.LabelNew("")
 	if err != nil {
 		e.logger.Error(err)
 		panic(err)
 	}
-	labelArgument.SetHAlign(gtk.ALIGN_START)
-	applicationArgument := `<span font="Sans Regular 10" foreground="#FFFFFF">` + application.Argument + `</span>`
-	labelArgument.SetMarkup(applicationArgument)
-	box.PackEnd(labelArgument, false, false, 10)
+	labelArgument.SetText(application.Argument)
+	labelArgument.SetXAlign(0.0)
+	sgArgument.AddWidget(labelArgument)
+	box.PackStart(labelArgument, true, true, 10)
 	return box
 }
 
