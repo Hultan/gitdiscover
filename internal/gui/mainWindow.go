@@ -1,7 +1,6 @@
 package gui
 
 import (
-	"bytes"
 	"fmt"
 	"github.com/gotk3/gotk3/gdk"
 	"github.com/gotk3/gotk3/gtk"
@@ -77,6 +76,15 @@ func (m *MainWindow) OpenMainWindow(app *gtk.Application) {
 
 	// Refresh repository list
 	m.refreshRepositoryList()
+
+	//m.window.Connect("notify::has-toplevel-focus", func(win *gtk.ApplicationWindow) {
+	//	m.refreshRepositoryList()
+	//	fmt.Println("Fokus!")
+	//})
+
+	// Popup menu
+	popup := NewPopupMenu(m)
+	popup.Setup()
 
 	// Show the main window
 	m.window.ShowAll()
@@ -352,6 +360,9 @@ func (m *MainWindow) createListItem(index int, dateFormat string, repo gitdiscov
 
 func (m *MainWindow) getSelectedRepo() *gitdiscover.RepositoryStatus {
 	row := m.repositoryListBox.GetSelectedRow()
+	if row == nil {
+		return nil
+	}
 	boxObj, err := row.GetChild()
 	if err != nil {
 		m.infoBar.ShowError(err.Error())
@@ -417,8 +428,7 @@ func (m *MainWindow) openInExternalApplication(name string, repo *gitdiscover.Re
 	m.executeCommand(app.Command, argument)
 }
 
-func (m *MainWindow) executeCommand(command, arguments string) {
-
+func (m *MainWindow) executeCommand(command, arguments string) string {
 	cmd := exec.Command(command, arguments)
 	// Forces the new process to detach from the GitDiscover process
 	// so that it does not die when GitDiscover dies
@@ -428,18 +438,27 @@ func (m *MainWindow) executeCommand(command, arguments string) {
 		Pgid:    0,
 	}
 
-	// set var to get the output
-	var out bytes.Buffer
-
 	// set the output to our variable
-	cmd.Stdout = &out
-	err := cmd.Start()
+	out, err := cmd.CombinedOutput()
 	if err != nil {
 		m.logger.Error("Failed to open external application: ", command, " ", arguments)
 		m.logger.Error(err)
 		m.infoBar.ShowError(err.Error())
-		return
+		return ""
 	}
+
+	return string(out)
+}
+
+func (m *MainWindow) executeCommands(commands, arguments []string) string {
+	var result = ""
+
+	for i := range commands {
+		command := commands[i]
+		argument := arguments[i]
+		result = m.executeCommand(command, argument)
+	}
+	return result
 }
 
 func (m *MainWindow) openAboutDialog() {
