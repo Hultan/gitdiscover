@@ -16,6 +16,7 @@ type RepositoryStatus struct {
 	ImagePath string
 	Status    string
 	Date      *time.Time
+	IsGit     bool
 }
 
 type Git struct {
@@ -41,10 +42,12 @@ func (g *Git) GetRepositories() ([]RepositoryStatus, error) {
 		if _, err := os.Stat(gitPath); os.IsNotExist(err) {
 			status.Date = g.getModifiedDate(basePath)
 			status.Status = ""
+			status.IsGit = false
 		} else {
 			gs := g.getGitStatus(basePath)
 			status.Date = g.getModifiedDate(basePath)
 			status.Status = strings.Replace(gs, "\n", "", -1)
+			status.IsGit = true
 		}
 
 		gitStatuses = append(gitStatuses, status)

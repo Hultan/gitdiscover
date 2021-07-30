@@ -202,10 +202,10 @@ func (m *MainWindow) refreshRepositoryList() {
 	// Sort the git status string after modified date of the .git folder
 	sort.Slice(repos, func(i, j int) bool {
 		// Make sure that non-git dirs sorts last
-		if repos[i].Status == "" {
+		if !repos[i].IsGit {
 			return false
 		}
-		if repos[j].Status == "" {
+		if !repos[j].IsGit {
 			return true
 		}
 
@@ -231,9 +231,10 @@ func (m *MainWindow) refreshRepositoryList() {
 	sepItem := m.createListSeparator("GIT REPOSITORIES")
 	m.repositoryListBox.Insert(sepItem, 0)
 
+	// Find where to insert the "Misc folders" separator
 	var index = -1
 	for i, repo := range repos {
-		if repo.Status == "" {
+		if !repo.IsGit {
 			index = i
 			break
 		}
@@ -298,7 +299,11 @@ func (m *MainWindow) createListItem(index int, dateFormat string, repo gitdiscov
 	iconPath := path.Join(repo.Path, repo.ImagePath)
 	if !fileExists(iconPath) {
 		// General icon for project that don't have one
-		iconPath, err = getResourcePath("code.png")
+		if repo.IsGit {
+			iconPath, err = getResourcePath("gitFolder.png")
+		} else {
+			iconPath, err = getResourcePath("folder.png")
+		}
 		if err != nil {
 			m.logger.Panic(err)
 			panic(err)
@@ -324,9 +329,9 @@ func (m *MainWindow) createListItem(index int, dateFormat string, repo gitdiscov
 	}
 	var text = ""
 	if repo.Date == nil {
-		text = `<span font="Sans Regular 10" foreground="#DD4444"></span>`
+		text = `<span font="Sans Regular 10" foreground="#44DD44"></span>`
 	} else {
-		text = `<span font="Sans Regular 10" foreground="#DD4444">` + repo.Date.Format(dateFormat) + `</span>`
+		text = `<span font="Sans Regular 10" foreground="#44DD44">` + repo.Date.Format(dateFormat) + `</span>`
 	}
 	label.SetMarkup(text)
 	label.SetName("lblDate")
