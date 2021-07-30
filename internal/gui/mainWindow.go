@@ -235,6 +235,7 @@ func (m *MainWindow) refreshRepositoryList() {
 	for i, repo := range repos {
 		if repo.Status == "" {
 			index = i
+			break
 		}
 	}
 
