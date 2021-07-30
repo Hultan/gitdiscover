@@ -4,7 +4,6 @@ import (
 	"github.com/gotk3/gotk3/gdk"
 	"github.com/gotk3/gotk3/gtk"
 	"io/ioutil"
-	"log"
 	"os"
 )
 
@@ -43,6 +42,29 @@ func (p *PopupMenu) setupEvents() {
 	_ = p.mainWindow.window.Connect("button-release-event", func(window *gtk.ApplicationWindow, event *gdk.Event) {
 		buttonEvent := gdk.EventButtonNewFromEvent(event)
 		if buttonEvent.Button() == gdk.BUTTON_SECONDARY {
+			//list := p.popupExternalApplications.GetChildren()
+
+			menu, err := gtk.MenuNew()
+			if err != nil {
+				p.mainWindow.logger.Error(err)
+			} else {
+				for i := 0; i < len(p.mainWindow.config.ExternalApplications); i++ {
+					app := p.mainWindow.config.ExternalApplications[i]
+					item, err := gtk.MenuItemNew()
+					if err != nil {
+						p.mainWindow.logger.Error(err)
+						continue
+					}
+					item.SetLabel(app.Name)
+					menu.Add(item)
+					item.Connect("activate", func() {
+						repo := p.mainWindow.getSelectedRepo()
+						p.mainWindow.openInExternalApplication(app.Name, repo)
+					})
+				}
+				p.popupExternalApplications.SetSubmenu(menu)
+				p.popupExternalApplications.ShowAll()
+			}
 			p.popupMenu.PopupAtPointer(event)
 		}
 	})
@@ -68,7 +90,7 @@ func (p *PopupMenu) setupEvents() {
 	})
 }
 
-func (p *PopupMenu) createFile(path, command string) string {
+func (p *PopupMenu) createFile(path, command string) (string, error) {
 	text := "#!/bin/sh\n"
 	text += "cd " + path + "\n"
 	text += command
@@ -76,18 +98,21 @@ func (p *PopupMenu) createFile(path, command string) string {
 	content := []byte(text)
 	tmpfile, err := ioutil.TempFile("", "gitdiscover.*.sh")
 	if err != nil {
-		log.Fatal(err)
+		p.mainWindow.logger.Error(err)
+		return "", err
 	}
 
 	// clean up
 	if _, err := tmpfile.Write(content); err != nil {
-		log.Fatal(err)
+		p.mainWindow.logger.Error(err)
+		return "", err
 	}
 	if err := tmpfile.Close(); err != nil {
-		log.Fatal(err)
+		p.mainWindow.logger.Error(err)
+		return "", err
 	}
 
-	return tmpfile.Name()
+	return tmpfile.Name(), nil
 }
 
 func (p *PopupMenu) runGitCommand(command string, outputType OutputType) {
@@ -98,11 +123,20 @@ func (p *PopupMenu) runGitCommand(command string, outputType OutputType) {
 	}
 	p.mainWindow.infoBar.hideInfoBar()
 
-	file := p.createFile(repo.Path, command)
+	file, err := p.createFile(repo.Path, command)
+	if err != nil {
+		p.mainWindow.logger.Error(err)
+		p.mainWindow.infoBar.ShowError(err.Error())
+		return
+	}
 
 	result := p.mainWindow.executeCommand("/bin/sh", file)
 	output := NewOutputWindow(p.mainWindow.builder, p.mainWindow.logger)
 	output.openWindow("", result, outputType)
 
-	os.Remove(file)
+	err = os.Remove(file)
+	if err != nil {
+		p.mainWindow.logger.Error(err)
+		p.mainWindow.infoBar.ShowError(err.Error())
+	}
 }
