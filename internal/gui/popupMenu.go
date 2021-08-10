@@ -12,6 +12,7 @@ type PopupMenu struct {
 	popupMenu  *gtk.Menu
 
 	popupAddFolder            *gtk.MenuItem
+	popupEditFolder			  *gtk.MenuItem
 	popupRemoveFolder         *gtk.MenuItem
 	popupExternalApplications *gtk.MenuItem
 	popupGitStatus            *gtk.MenuItem
@@ -29,6 +30,7 @@ func (p *PopupMenu) Setup() {
 	p.popupMenu = p.mainWindow.builder.getObject("popupMenu").(*gtk.Menu)
 
 	p.popupAddFolder = p.mainWindow.builder.getObject("popupAddFolder").(*gtk.MenuItem)
+	p.popupEditFolder = p.mainWindow.builder.getObject("popupEditFolder").(*gtk.MenuItem)
 	p.popupRemoveFolder = p.mainWindow.builder.getObject("popupRemoveFolder").(*gtk.MenuItem)
 	p.popupExternalApplications = p.mainWindow.builder.getObject("popupExternalApplications").(*gtk.MenuItem)
 	p.popupGitStatus = p.mainWindow.builder.getObject("popupGitStatus").(*gtk.MenuItem)
@@ -71,6 +73,10 @@ func (p *PopupMenu) setupEvents() {
 
 	p.popupAddFolder.Connect("activate", func() {
 		p.mainWindow.addButtonClicked()
+	})
+
+	p.popupEditFolder.Connect("activate", func() {
+		p.mainWindow.editButtonClicked()
 	})
 
 	p.popupRemoveFolder.Connect("activate", func() {

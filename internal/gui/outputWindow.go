@@ -79,6 +79,11 @@ func (o *OutputWindow) openWindow(header, text string, outputType OutputType) {
 	window.ShowAll()
 }
 
+func (o *OutputWindow) closeWindow() {
+	o.window.Hide()
+	o.window = nil
+}
+
 func getHeader(header string, outputType OutputType) string {
 	if header=="" {
 		switch outputType {
@@ -177,9 +182,4 @@ func (o *OutputWindow) formatTextGitLog(text string) string {
 	}
 
 	return result
-}
-
-func (o *OutputWindow) closeWindow() {
-	o.window.Hide()
-	o.window = nil
 }

@@ -9,7 +9,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"os"
 	"os/exec"
-	"path"
 	"sort"
 	"strconv"
 	"strings"
@@ -113,6 +112,10 @@ func (m *MainWindow) setupToolBar() {
 	button = m.builder.getObject("toolbarAddButton").(*gtk.ToolButton)
 	_ = button.Connect("clicked", m.addButtonClicked)
 
+	// Edit button
+	button = m.builder.getObject("toolbarEditButton").(*gtk.ToolButton)
+	_ = button.Connect("clicked", m.editButtonClicked)
+
 	// Remove button
 	button = m.builder.getObject("toolbarRemoveButton").(*gtk.ToolButton)
 	_ = button.Connect("clicked", m.removeButtonClicked)
@@ -167,6 +170,16 @@ func (m *MainWindow) addButtonClicked() {
 	fmt.Println("Added path : ", dialog.GetFilename())
 	dialog.Destroy()
 	m.refreshRepositoryList()
+}
+
+func (m *MainWindow) editButtonClicked() {
+	folder := m.getSelectedRepo()
+	if folder ==nil {
+		// TODO : Handle this error, must select folder
+		return
+	}
+	win := NewEditFolderWindow(m)
+	win.openWindow(folder)
 }
 
 func (m *MainWindow) removeButtonClicked() {
@@ -296,7 +309,7 @@ func (m *MainWindow) createListItem(index int, dateFormat string, repo gitdiscov
 	box.SetName(fmt.Sprintf("box_%v", index))
 
 	// Icon
-	iconPath := path.Join(repo.Path, repo.ImagePath)
+	iconPath := repo.ImagePath
 	if !fileExists(iconPath) {
 		// General icon for project that don't have one
 		if repo.IsGit {
@@ -400,11 +413,15 @@ func (m *MainWindow) getSelectedRepo() *gitdiscover.RepositoryStatus {
 }
 
 func (m *MainWindow) openConfig() {
-	m.executeCommand("xed", m.config.GetConfigPath())
+	go func() {
+		m.executeCommand("xed", m.config.GetConfigPath())
+	}()
 }
 
 func (m *MainWindow) openLog() {
-	m.executeCommand("xed", m.ApplicationLogPath)
+	go func() {
+		m.executeCommand("xed", m.ApplicationLogPath)
+	}()
 }
 
 func (m *MainWindow) openInExternalApplication(name string, repo *gitdiscover.RepositoryStatus) {
@@ -431,7 +448,9 @@ func (m *MainWindow) openInExternalApplication(name string, repo *gitdiscover.Re
 	}
 
 	m.logger.Info("Trying to open external application: ", app.Command, " ", argument)
-	m.executeCommand(app.Command, argument)
+	go func() {
+		m.executeCommand(app.Command, argument)
+	}()
 }
 
 func (m *MainWindow) executeCommand(command, arguments string) string {
@@ -454,17 +473,6 @@ func (m *MainWindow) executeCommand(command, arguments string) string {
 	}
 
 	return string(out)
-}
-
-func (m *MainWindow) executeCommands(commands, arguments []string) string {
-	var result = ""
-
-	for i := range commands {
-		command := commands[i]
-		argument := arguments[i]
-		result = m.executeCommand(command, argument)
-	}
-	return result
 }
 
 func (m *MainWindow) openAboutDialog() {

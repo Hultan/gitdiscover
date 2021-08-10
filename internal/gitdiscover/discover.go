@@ -11,6 +11,8 @@ import (
 	"time"
 )
 
+// TODO : Rename RepositoryStatus, do not need to be a repository anymore
+
 type RepositoryStatus struct {
 	Path      string
 	ImagePath string

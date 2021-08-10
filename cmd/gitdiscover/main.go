@@ -89,7 +89,7 @@ func startLogging() *logrus.Logger {
 	l.Level = logrus.TraceLevel
 	l.Out = os.Stdout
 
-	file, err := os.OpenFile(ApplicationLogPath, os.O_APPEND|os.O_WRONLY, 0666)
+	file, err := os.OpenFile(ApplicationLogPath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
 	if err == nil {
 		l.Out = file
 	} else {

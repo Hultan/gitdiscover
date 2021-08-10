@@ -177,6 +177,20 @@
               </packing>
             </child>
             <child>
+              <object class="GtkToolButton" id="toolbarEditButton">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="is-important">True</property>
+                <property name="label" translatable="yes">Edit</property>
+                <property name="use-underline">True</property>
+                <property name="stock-id">gtk-edit</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
               <object class="GtkToolButton" id="toolbarRemoveButton">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
@@ -334,6 +348,14 @@
         <property name="visible">True</property>
         <property name="can-focus">False</property>
         <property name="label" translatable="yes">Add folder...</property>
+        <property name="use-underline">True</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkMenuItem" id="popupEditFolder">
+        <property name="visible">True</property>
+        <property name="can-focus">False</property>
+        <property name="label" translatable="yes">Edit folder...</property>
         <property name="use-underline">True</property>
       </object>
     </child>
