@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"github.com/gotk3/gotk3/gtk"
 	gitConfig "github.com/hultan/gitdiscover/internal/config"
@@ -22,14 +21,10 @@ func main() {
 	config := loadConfig()
 
 	// Check if GUI is reuqested
-	guiRequested := isGuiRequested()
-	if guiRequested {
+	if len(os.Args) > 1 {
 		logger.Info("Starting GitDiscover GUI!")
 		showGUI(logger, config)
 	}
-
-	// Check command line arguments
-	checkArguments()
 
 	// Get repository list
 	gitDiscover := gitdiscover.NewGit(config, logger)
@@ -127,18 +122,6 @@ func loadConfig() *gitConfig.Config {
 // GUI functions
 //
 
-func isGuiRequested() bool {
-	if len(os.Args) == 1 {
-		return false
-	}
-
-	if os.Args[1] == "-gui" {
-		return true
-	}
-
-	return false
-}
-
 func showGUI(logger *logrus.Logger, config *gitConfig.Config) {
 	// Create a new application
 	application, err := gtk.ApplicationNew(ApplicationId, ApplicationFlags)
@@ -154,27 +137,4 @@ func showGUI(logger *logrus.Logger, config *gitConfig.Config) {
 	// Start the application (and exit when it is done)
 	exitCode := application.Run(nil)
 	exitProgram(exitCode, nil)
-}
-
-//
-// Check command line arguments
-//
-
-func checkArguments() {
-	if len(os.Args) > 1 {
-		if os.Args[1] == "--version" {
-			version := gui.ApplicationVersion
-			logger.Info("Version requested : ", version)
-			fmt.Printf("Gitdiscover %s\n", version)
-			exitProgram(exitNormal, nil)
-		} else if os.Args[1] == "--help" {
-			logger.Info("Help requested.")
-			fmt.Println("Usage : gitdiscover [--version] [--help]")
-			exitProgram(exitNormal, nil)
-		} else {
-			err := errors.New(fmt.Sprintf("Invalid argument : %s", os.Args[1]))
-			fmt.Println("Usage : gitdiscover [--version] [--help]")
-			exitProgram(exitArgumentError, err)
-		}
-	}
 }

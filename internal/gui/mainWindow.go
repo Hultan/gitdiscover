@@ -12,7 +12,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"syscall"
 )
 
 type MainWindow struct {
@@ -458,10 +457,10 @@ func (m *MainWindow) executeCommand(command, arguments string) string {
 	// Forces the new process to detach from the GitDiscover process
 	// so that it does not die when GitDiscover dies
 	// https://stackoverflow.com/questions/62853835/how-to-use-syscall-sysprocattr-struct-fields-for-windows-when-os-is-set-for-linu
-	cmd.SysProcAttr = &syscall.SysProcAttr{
-		Setpgid: true,
-		Pgid:    0,
-	}
+	//cmd.SysProcAttr = &syscall.SysProcAttr{
+	//	Setpgid: true,
+	//	Pgid:    0,
+	//}
 
 	// set the output to our variable
 	out, err := cmd.CombinedOutput()
