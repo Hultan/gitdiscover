@@ -24,7 +24,6 @@ type MainWindow struct {
 	window            *gtk.ApplicationWindow
 	repositoryListBox *gtk.ListBox
 	repositories      []gitdiscover.RepositoryStatus
-	terminalOrNemo    *gtk.ToggleToolButton
 	infoBar           *InfoBar
 	toolBar           *gtk.Toolbar
 }
@@ -95,7 +94,6 @@ func (m *MainWindow) closeMainWindow() {
 	m.repositoryListBox.Destroy()
 	m.repositoryListBox = nil
 	m.repositories = nil
-	m.terminalOrNemo = nil
 	m.window.Destroy()
 	m.window = nil
 	m.builder.destroy()
