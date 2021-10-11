@@ -255,7 +255,7 @@ func (m *MainWindow) refreshRepositoryList() {
 	}
 
 	if index != -1 {
-		sepItem = m.createListSeparator("MISC FOLDERS")
+		sepItem = m.createListSeparator("NON-GIT FOLDERS")
 		m.repositoryListBox.Insert(sepItem, index + 1)
 	}
 
