@@ -2,13 +2,15 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"sort"
+
 	"github.com/gotk3/gotk3/gtk"
+	"github.com/sirupsen/logrus"
+
 	gitConfig "github.com/hultan/gitdiscover/internal/config"
 	"github.com/hultan/gitdiscover/internal/gitdiscover"
 	"github.com/hultan/gitdiscover/internal/gui"
-	"github.com/sirupsen/logrus"
-	"os"
-	"sort"
 )
 
 var (
@@ -35,8 +37,8 @@ func main() {
 
 	// Sort the git status string after modified date of the .git folder
 	sort.Slice(gitStatuses, func(i, j int) bool {
-		date1 := gitStatuses[i].Date
-		date2 := gitStatuses[j].Date
+		date1 := gitStatuses[i].ModifiedDate
+		date2 := gitStatuses[j].ModifiedDate
 		if date1 == nil || date2 == nil {
 			return false
 		}
@@ -49,10 +51,10 @@ func main() {
 	fmt.Println("_______________________")
 	for _, status := range gitStatuses {
 		var text = ""
-		if status.Date == nil {
+		if status.ModifiedDate == nil {
 			text = fmt.Sprintf("%v - %v - %v", "2006-01-02, kl. 15:04", status.Path, status.Status)
 		} else {
-			text = fmt.Sprintf("%s - %s - %s", status.Date.Format(config.DateFormat), status.Path, status.Status)
+			text = fmt.Sprintf("%s - %s - %s", status.ModifiedDate.Format(config.DateFormat), status.Path, status.Status)
 		}
 		fmt.Println(text)
 		logger.Info(text)

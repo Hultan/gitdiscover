@@ -2,16 +2,19 @@ package gui
 
 import (
 	"fmt"
-	"github.com/gotk3/gotk3/gdk"
-	"github.com/gotk3/gotk3/gtk"
-	gitConfig "github.com/hultan/gitdiscover/internal/config"
-	"github.com/hultan/gitdiscover/internal/gitdiscover"
-	"github.com/sirupsen/logrus"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/gotk3/gotk3/gdk"
+	"github.com/gotk3/gotk3/gtk"
+	"github.com/sirupsen/logrus"
+
+	gitConfig "github.com/hultan/gitdiscover/internal/config"
+	"github.com/hultan/gitdiscover/internal/gitdiscover"
 )
 
 type MainWindow struct {
@@ -23,7 +26,7 @@ type MainWindow struct {
 	builder           *GtkBuilder
 	window            *gtk.ApplicationWindow
 	repositoryListBox *gtk.ListBox
-	repositories      []gitdiscover.RepositoryStatus
+	repositories      []*gitdiscover.Repository
 	infoBar           *InfoBar
 	toolBar           *gtk.Toolbar
 }
@@ -161,7 +164,8 @@ func (m *MainWindow) addButtonClicked() {
 		return
 	}
 
-	repo := gitConfig.Repository{Path: dialog.GetFilename(), ImagePath: "assets/application.png"}
+	imagePath := filepath.Join(dialog.GetFilename(),"assets/application.png")
+	repo := gitConfig.Repository{Path: dialog.GetFilename(), ImagePath: imagePath}
 	m.config.Repositories = append(m.config.Repositories, repo)
 	m.config.Save()
 	fmt.Println("Added path : ", dialog.GetFilename())
@@ -220,8 +224,8 @@ func (m *MainWindow) refreshRepositoryList() {
 		}
 
 		// Sort by date
-		date1 := repos[i].Date
-		date2 := repos[j].Date
+		date1 := repos[i].ModifiedDate
+		date2 := repos[j].ModifiedDate
 		if date1 == nil || date2 == nil {
 			return false
 		}
@@ -294,7 +298,7 @@ func (m *MainWindow) createListSeparator(text string) *gtk.Box {
 	return box
 }
 
-func (m *MainWindow) createListItem(index int, dateFormat string, repo gitdiscover.RepositoryStatus,
+func (m *MainWindow) createListItem(index int, dateFormat string, repo *gitdiscover.Repository,
 	sgDate *gtk.SizeGroup) *gtk.Box {
 
 	// Create main box
@@ -338,10 +342,10 @@ func (m *MainWindow) createListItem(index int, dateFormat string, repo gitdiscov
 		panic(err)
 	}
 	var text = ""
-	if repo.Date == nil {
+	if repo.ModifiedDate == nil {
 		text = `<span font="Sans Regular 10" foreground="#44DD44"></span>`
 	} else {
-		text = `<span font="Sans Regular 10" foreground="#44DD44">` + repo.Date.Format(dateFormat) + `</span>`
+		text = `<span font="Sans Regular 10" foreground="#44DD44">` + repo.ModifiedDate.Format(dateFormat) + `</span>`
 	}
 	label.SetMarkup(text)
 	label.SetName("lblDate")
@@ -374,7 +378,7 @@ func (m *MainWindow) createListItem(index int, dateFormat string, repo gitdiscov
 	return box
 }
 
-func (m *MainWindow) getSelectedRepo() *gitdiscover.RepositoryStatus {
+func (m *MainWindow) getSelectedRepo() *gitdiscover.Repository {
 	row := m.repositoryListBox.GetSelectedRow()
 	if row == nil {
 		return nil
@@ -406,7 +410,7 @@ func (m *MainWindow) getSelectedRepo() *gitdiscover.RepositoryStatus {
 	repo := m.repositories[index]
 	repo.Path = strings.Trim(repo.Path, " ")
 
-	return &repo
+	return repo
 }
 
 func (m *MainWindow) openConfig() {
@@ -421,7 +425,7 @@ func (m *MainWindow) openLog() {
 	}()
 }
 
-func (m *MainWindow) openInExternalApplication(name string, repo *gitdiscover.RepositoryStatus) {
+func (m *MainWindow) openInExternalApplication(name string, repo *gitdiscover.Repository) {
 	// Find application
 	app := m.config.GetExternalApplicationByName(name)
 	if app == nil {

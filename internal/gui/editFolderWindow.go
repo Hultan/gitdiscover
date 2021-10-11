@@ -3,6 +3,7 @@ package gui
 import (
 	"github.com/gotk3/gotk3/gdk"
 	"github.com/gotk3/gotk3/gtk"
+
 	"github.com/hultan/gitdiscover/internal/gitdiscover"
 )
 
@@ -11,7 +12,7 @@ type EditFolderWindow struct {
 	window         *gtk.Window
 	builder        *GtkBuilder
 	image          *gtk.Image
-	folder         *gitdiscover.RepositoryStatus
+	folder         *gitdiscover.Repository
 	folderIconPath *gtk.Entry
 }
 
@@ -21,7 +22,7 @@ func NewEditFolderWindow(mainWindow *MainWindow) *EditFolderWindow {
 	return edit
 }
 
-func (e *EditFolderWindow) openWindow(folder *gitdiscover.RepositoryStatus) {
+func (e *EditFolderWindow) openWindow(folder *gitdiscover.Repository) {
 	// Create a new softBuilder
 	e.builder = NewGtkBuilder("editFolderWindow.ui", e.mainWindow.logger)
 

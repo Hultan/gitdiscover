@@ -1,9 +1,15 @@
 package config
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
+
+func TestConfig_NewConfig(t *testing.T) {
+	config := NewConfig()
+	assert.NotNil(t, config)
+}
 
 func TestConfig_GetConfigPath(t *testing.T) {
 	config := NewConfig()
@@ -15,11 +21,16 @@ func TestConfig_Load(t *testing.T) {
 	config := NewConfig()
 	err := config.Load()
 	assert.Nil(t, err)
-	assert.Equal(t, "/home/per/code/gotk3-more-examples", config.Repositories[2].Path)
-	assert.Equal(t, "assets/application.png", config.Repositories[2].ImagePath)
-	assert.Equal(t, "Nemo", config.ExternalApplications[1].Name)
-	assert.Equal(t, "nemo", config.ExternalApplications[1].Command)
-	assert.Equal(t, "%PATH%", config.ExternalApplications[1].Argument)
+
+	assert.Equal(t, "/home/per/code/gotk3-more-examples",
+		config.GetRepositoryByPath("/home/per/code/gotk3-more-examples").Path)
+
+	assert.Equal(t, "/home/per/code/gotk3-more-examples/assets/application.png",
+		config.GetRepositoryByPath("/home/per/code/gotk3-more-examples").ImagePath)
+
+	assert.Equal(t, "Nemo", config.GetExternalApplicationByName("Nemo").Name)
+	assert.Equal(t, "nemo", config.GetExternalApplicationByName("Nemo").Command)
+	assert.Equal(t, "%PATH%", config.GetExternalApplicationByName("Nemo").Argument)
 	assert.Equal(t, "2006-01-02, kl. 15:04", config.DateFormat)
 	assert.Equal(t, 40, config.PathColumnWidth)
 }
@@ -31,11 +42,6 @@ func TestConfig_getHomeDirectory(t *testing.T) {
 	config := NewConfig()
 	home := config.getHomeDirectory()
 	assert.Equal(t, "/home/per", home)
-}
-
-func TestConfig_NewConfig(t *testing.T) {
-	config := NewConfig()
-	assert.NotNil(t, config)
 }
 
 func TestConfig_ConfigExists(t *testing.T) {

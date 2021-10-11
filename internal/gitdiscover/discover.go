@@ -1,61 +1,71 @@
 package gitdiscover
 
 import (
-	gitConfig "github.com/hultan/gitdiscover/internal/config"
-	"github.com/sirupsen/logrus"
 	"os"
 	"os/exec"
 	"path"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/sirupsen/logrus"
+
+	gitConfig "github.com/hultan/gitdiscover/internal/config"
 )
 
-// TODO : Rename RepositoryStatus, do not need to be a repository anymore
-
-type RepositoryStatus struct {
-	Path      string
-	ImagePath string
-	Status    string
-	Date      *time.Time
-	IsGit     bool
+type Repository struct {
+	Name         string
+	Path         string
+	ImagePath    string
+	Status       string
+	ModifiedDate *time.Time
+	IsGit        bool
 }
 
 type Git struct {
-	Logger *logrus.Logger
-	Config *gitConfig.Config
+	Logger      *logrus.Logger
+	Config       *gitConfig.Config
+	Repositories []*Repository
 }
 
 func NewGit(config *gitConfig.Config, logger *logrus.Logger) *Git {
 	git := new(Git)
 	git.Config = config
 	git.Logger = logger
+	git.GetRepositories()
 	return git
 }
 
-func (g *Git) GetRepositories() ([]RepositoryStatus, error) {
+func (g *Git) GetRepositories() ([]*Repository, error) {
 	// Get the git statuses of the paths in the config
-	var gitStatuses []RepositoryStatus
+	var directories []*Repository
+
 	for _, repo := range g.Config.Repositories {
 		basePath := repo.Path
 		gitPath := path.Join(basePath, ".git")
-		status := RepositoryStatus{Path: basePath, ImagePath: repo.ImagePath}
 
-		if _, err := os.Stat(gitPath); os.IsNotExist(err) {
-			status.Date = g.getModifiedDate(basePath)
-			status.Status = ""
-			status.IsGit = false
-		} else {
-			gs := g.getGitStatus(basePath)
-			status.Date = g.getModifiedDate(basePath)
-			status.Status = strings.Replace(gs, "\n", "", -1)
-			status.IsGit = true
+		dir := Repository{
+			Path: basePath,
+			ImagePath: repo.ImagePath,
+			ModifiedDate: g.getModifiedDate(repo.Path),
+			Name : path.Base(repo.Path),
 		}
 
-		gitStatuses = append(gitStatuses, status)
+		if _, err := os.Stat(gitPath); os.IsNotExist(err) {
+			dir.Status = ""
+			dir.IsGit = false
+		} else {
+			gs := g.getGitStatus(basePath)
+			dir.Status = strings.Replace(gs, "\n", "", -1)
+			dir.IsGit = true
+		}
+
+		directories = append(directories, &dir)
 	}
 
-	return gitStatuses, nil
+	g.Repositories = directories
+
+	return directories, nil
 }
 
 // Get the git status
@@ -84,4 +94,24 @@ func (g *Git) getModifiedDate(path string) *time.Time {
 // Create format string for failed git statuses
 func (g *Git) createPathFormatString() string {
 	return "%-" + strconv.Itoa(g.Config.PathColumnWidth) + "s"
+}
+
+func (g *Git) GetRepositoryByName(name string) []*Repository {
+	repos := make([]*Repository,0)
+
+	for _, repo := range g.Repositories {
+		if repo.Name == name {
+			repos = append(repos, repo)
+		}
+	}
+	return repos
+}
+
+func (g *Git) GetRepositoryByPath(path string) *Repository {
+	for _, repo := range g.Repositories {
+		if repo.Path == path {
+			return repo
+		}
+	}
+	return nil
 }

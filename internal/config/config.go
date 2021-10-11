@@ -142,3 +142,14 @@ func (config *Config) GetExternalApplicationByName(name string) *ExternalApplica
 
 	return nil
 }
+
+func (config *Config) GetRepositoryByPath(path string) *Repository {
+	for i := range config.Repositories {
+		ext := config.Repositories[i]
+		if ext.Path == path {
+			return &ext
+		}
+	}
+
+	return nil
+}
