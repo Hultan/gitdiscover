@@ -83,11 +83,6 @@ func (m *MainWindow) OpenMainWindow(app *gtk.Application) {
 	// Refresh repository list
 	m.refreshRepositoryList()
 
-	//m.window.Connect("notify::has-toplevel-focus", func(win *gtk.ApplicationWindow) {
-	//	m.refreshRepositoryList()
-	//	fmt.Println("Fokus!")
-	//})
-
 	// Popup menu
 	popup := NewPopupMenu(m)
 	popup.Setup()
