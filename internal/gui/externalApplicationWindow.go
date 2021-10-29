@@ -2,8 +2,12 @@ package gui
 
 import (
 	"fmt"
+
 	"github.com/gotk3/gotk3/gtk"
+
 	"github.com/hultan/gitdiscover/internal/config"
+	"github.com/hultan/softteam/framework"
+
 	"github.com/sirupsen/logrus"
 )
 
@@ -16,7 +20,7 @@ const (
 
 type ExternalApplicationDialog struct {
 	window  *gtk.Window
-	builder *GtkBuilder
+	builder *framework.GtkBuilder
 	config  *config.Config
 	logger  *logrus.Logger
 
@@ -41,9 +45,14 @@ func NewExternalApplicationDialog(logger *logrus.Logger, config *config.Config) 
 
 func (e *ExternalApplicationDialog) openDialog(parent *gtk.Window, saveCallback func() bool) {
 	// Create a new softBuilder
-	e.builder = NewGtkBuilder("externalApplicationWindow.ui", e.logger)
+	fw := framework.NewFramework()
+	builder, err := fw.Gtk.CreateBuilder("externalApplicationWindow.ui")
+	if err != nil {
+		panic(err)
+	}
+	e.builder = builder
 
-	window := e.builder.getObject("externalApplicationWindow").(*gtk.Window)
+	window := e.builder.GetObject("externalApplicationWindow").(*gtk.Window)
 	window.Connect("destroy", window.Destroy)
 	if e.mode == modeNew {
 		window.SetTitle("New external application")
@@ -56,14 +65,14 @@ func (e *ExternalApplicationDialog) openDialog(parent *gtk.Window, saveCallback 
 	window.SetKeepAbove(true)
 	window.SetPosition(gtk.WIN_POS_CENTER_ALWAYS)
 
-	button := e.builder.getObject("saveButton").(*gtk.Button)
+	button := e.builder.GetObject("saveButton").(*gtk.Button)
 	button.Connect("clicked", e.save)
-	button = e.builder.getObject("cancelButton").(*gtk.Button)
+	button = e.builder.GetObject("cancelButton").(*gtk.Button)
 	button.Connect("clicked", e.cancel)
 
-	e.nameEntry = e.builder.getObject("nameEntry").(*gtk.Entry)
-	e.commandEntry = e.builder.getObject("commandEntry").(*gtk.Entry)
-	e.argumentEntry = e.builder.getObject("argumentEntry").(*gtk.Entry)
+	e.nameEntry = e.builder.GetObject("nameEntry").(*gtk.Entry)
+	e.commandEntry = e.builder.GetObject("commandEntry").(*gtk.Entry)
+	e.argumentEntry = e.builder.GetObject("argumentEntry").(*gtk.Entry)
 	if e.mode == modeEdit {
 		e.originalName = e.externalApplication.Name
 

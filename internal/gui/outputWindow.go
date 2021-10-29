@@ -2,9 +2,12 @@ package gui
 
 import (
 	"bufio"
+	"strings"
+
 	"github.com/gotk3/gotk3/gtk"
 	"github.com/sirupsen/logrus"
-	"strings"
+
+	"github.com/hultan/softteam/framework"
 )
 
 type OutputType uint
@@ -16,12 +19,12 @@ const (
 )
 
 type OutputWindow struct {
-	builder *GtkBuilder
+	builder *framework.GtkBuilder
 	logger *logrus.Logger
 	window *gtk.Window
 }
 
-func NewOutputWindow(builder *GtkBuilder, logger *logrus.Logger) *OutputWindow {
+func NewOutputWindow(builder *framework.GtkBuilder, logger *logrus.Logger) *OutputWindow {
 	output := new(OutputWindow)
 	output.builder = builder
 	output.logger = logger
@@ -30,9 +33,14 @@ func NewOutputWindow(builder *GtkBuilder, logger *logrus.Logger) *OutputWindow {
 
 func (o *OutputWindow) openWindow(header, text string, outputType OutputType) {
 	// Create a new softBuilder
-	o.builder = NewGtkBuilder("outputWindow.ui", o.logger)
+	fw := framework.NewFramework()
+	builder, err := fw.Gtk.CreateBuilder("outputWindow.ui")
+	if err != nil {
+		panic(err)
+	}
+	o.builder = builder
 
-	window := o.builder.getObject("outputWindow").(*gtk.Window)
+	window := o.builder.GetObject("outputWindow").(*gtk.Window)
 	window.Connect("destroy", o.closeWindow)
 	window.SetTitle("Output window...")
 	window.HideOnDelete()
@@ -40,14 +48,14 @@ func (o *OutputWindow) openWindow(header, text string, outputType OutputType) {
 	window.SetKeepAbove(true)
 	window.SetPosition(gtk.WIN_POS_CENTER_ALWAYS)
 
-	button := o.builder.getObject("closeButton").(*gtk.Button)
+	button := o.builder.GetObject("closeButton").(*gtk.Button)
 	button.Connect("clicked", o.closeWindow)
 
-	label := o.builder.getObject("labelHeader").(*gtk.Label)
+	label := o.builder.GetObject("labelHeader").(*gtk.Label)
 	header = getHeader(header, outputType)
 	label.SetText(header)
 
-	textView := o.builder.getObject("textView").(*gtk.TextView)
+	textView := o.builder.GetObject("textView").(*gtk.TextView)
 	buffer, err := gtk.TextBufferNew(nil)
 	if err != nil {
 		o.logger.Error(err)

@@ -3,6 +3,8 @@ package gui
 import (
 	"github.com/gotk3/gotk3/gtk"
 	"github.com/sirupsen/logrus"
+
+	"github.com/hultan/softteam/framework"
 )
 
 type aboutDialog struct {
@@ -21,8 +23,12 @@ func NewAboutDialog(logger *logrus.Logger, parent *gtk.ApplicationWindow) *about
 func (m *aboutDialog) openAboutDialog() {
 	if m.dialog == nil {
 		// Create a new softBuilder
-		builder := NewGtkBuilder("about.ui", m.logger)
-		about := builder.getObject("aboutDialog").(*gtk.AboutDialog)
+		fw := framework.NewFramework()
+		builder, err := fw.Gtk.CreateBuilder("about.ui")
+		if err != nil {
+			panic(err)
+		}
+		about := builder.GetObject("aboutDialog").(*gtk.AboutDialog)
 
 		about.SetDestroyWithParent(true)
 		about.SetTransientFor(m.parent)

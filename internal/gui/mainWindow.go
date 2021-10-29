@@ -15,6 +15,7 @@ import (
 
 	gitConfig "github.com/hultan/gitdiscover/internal/config"
 	"github.com/hultan/gitdiscover/internal/gitdiscover"
+	"github.com/hultan/softteam/framework"
 )
 
 type MainWindow struct {
@@ -23,7 +24,7 @@ type MainWindow struct {
 	logger *logrus.Logger
 	config *gitConfig.Config
 
-	builder           *GtkBuilder
+	builder           *framework.GtkBuilder
 	window            *gtk.ApplicationWindow
 	repositoryListBox *gtk.ListBox
 	repositories      []*gitdiscover.Repository
@@ -45,10 +46,15 @@ func (m *MainWindow) OpenMainWindow(app *gtk.Application) {
 	gtk.Init(&os.Args)
 
 	// Create a new softBuilder
-	m.builder = NewGtkBuilder("mainWindow.ui", m.logger)
+	fw := framework.NewFramework()
+	builder, err := fw.Gtk.CreateBuilder("mainWindow.ui")
+	if err != nil {
+		panic(err)
+	}
+	m.builder = builder
 
 	// Get the main window from the glade file
-	m.window = m.builder.getObject("mainWindow").(*gtk.ApplicationWindow)
+	m.window = m.builder.GetObject("mainWindow").(*gtk.ApplicationWindow)
 
 	// Set up main window
 	m.window.SetApplication(app)
@@ -56,23 +62,23 @@ func (m *MainWindow) OpenMainWindow(app *gtk.Application) {
 	_ = m.window.Connect("destroy", m.closeMainWindow)
 
 	// Toolbar
-	m.toolBar = m.builder.getObject("toolbar").(*gtk.Toolbar)
+	m.toolBar = m.builder.GetObject("toolbar").(*gtk.Toolbar)
 	m.setupToolBar()
 
 	// MenuBar
 	m.setupMenuBar()
 
 	// Status bar
-	lblInformation := m.builder.getObject("lblApplicationInfo").(*gtk.Label)
+	lblInformation := m.builder.GetObject("lblApplicationInfo").(*gtk.Label)
 	lblInformation.SetText(fmt.Sprintf("%s %s - %s", ApplicationTitle, ApplicationVersion, ApplicationCopyRight))
 
 	// Info bar
-	infoBar := m.builder.getObject("infoBar").(*gtk.InfoBar)
-	labelInfoBar := m.builder.getObject("labelInfoBar").(*gtk.Label)
+	infoBar := m.builder.GetObject("infoBar").(*gtk.InfoBar)
+	labelInfoBar := m.builder.GetObject("labelInfoBar").(*gtk.Label)
 	m.infoBar = NewInfoBar(infoBar, labelInfoBar)
 
 	// Repository list box
-	m.repositoryListBox = m.builder.getObject("repositoryListBox").(*gtk.ListBox)
+	m.repositoryListBox = m.builder.GetObject("repositoryListBox").(*gtk.ListBox)
 
 	// Refresh repository list
 	m.refreshRepositoryList()
@@ -99,29 +105,28 @@ func (m *MainWindow) closeMainWindow() {
 	m.repositories = nil
 	m.window.Destroy()
 	m.window = nil
-	m.builder.destroy()
 	m.builder = nil
 }
 
 func (m *MainWindow) setupToolBar() {
 	// Quit button
-	button := m.builder.getObject("toolbarQuitButton").(*gtk.ToolButton)
+	button := m.builder.GetObject("toolbarQuitButton").(*gtk.ToolButton)
 	_ = button.Connect("clicked", m.window.Close)
 
 	// Add button
-	button = m.builder.getObject("toolbarAddButton").(*gtk.ToolButton)
+	button = m.builder.GetObject("toolbarAddButton").(*gtk.ToolButton)
 	_ = button.Connect("clicked", m.addButtonClicked)
 
 	// Edit button
-	button = m.builder.getObject("toolbarEditButton").(*gtk.ToolButton)
+	button = m.builder.GetObject("toolbarEditButton").(*gtk.ToolButton)
 	_ = button.Connect("clicked", m.editButtonClicked)
 
 	// Remove button
-	button = m.builder.getObject("toolbarRemoveButton").(*gtk.ToolButton)
+	button = m.builder.GetObject("toolbarRemoveButton").(*gtk.ToolButton)
 	_ = button.Connect("clicked", m.removeButtonClicked)
 
 	// Refresh button
-	button = m.builder.getObject("toolbarRefreshButton").(*gtk.ToolButton)
+	button = m.builder.GetObject("toolbarRefreshButton").(*gtk.ToolButton)
 	_ = button.Connect("clicked", m.refreshRepositoryList)
 
 	m.refreshExternalApplications(m.toolBar)
@@ -129,19 +134,19 @@ func (m *MainWindow) setupToolBar() {
 
 func (m *MainWindow) setupMenuBar() {
 	// File menu
-	button := m.builder.getObject("menuFileQuit").(*gtk.MenuItem)
+	button := m.builder.GetObject("menuFileQuit").(*gtk.MenuItem)
 	_ = button.Connect("activate", m.window.Close)
 
 	// Edit menu
-	button = m.builder.getObject("menuEditExternalApplications").(*gtk.MenuItem)
+	button = m.builder.GetObject("menuEditExternalApplications").(*gtk.MenuItem)
 	_ = button.Connect("activate", m.openExternalToolsDialog)
-	button = m.builder.getObject("menuEditConfig").(*gtk.MenuItem)
+	button = m.builder.GetObject("menuEditConfig").(*gtk.MenuItem)
 	_ = button.Connect("activate", m.openConfig)
-	button = m.builder.getObject("menuEditLog").(*gtk.MenuItem)
+	button = m.builder.GetObject("menuEditLog").(*gtk.MenuItem)
 	_ = button.Connect("activate", m.openLog)
 
 	// About menu
-	button = m.builder.getObject("menuHelpAbout").(*gtk.MenuItem)
+	button = m.builder.GetObject("menuHelpAbout").(*gtk.MenuItem)
 	_ = button.Connect("activate", m.openAboutDialog)
 }
 

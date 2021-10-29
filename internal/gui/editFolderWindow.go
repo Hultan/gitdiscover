@@ -5,12 +5,13 @@ import (
 	"github.com/gotk3/gotk3/gtk"
 
 	"github.com/hultan/gitdiscover/internal/gitdiscover"
+	"github.com/hultan/softteam/framework"
 )
 
 type EditFolderWindow struct {
 	mainWindow     *MainWindow
 	window         *gtk.Window
-	builder        *GtkBuilder
+	builder        *framework.GtkBuilder
 	image          *gtk.Image
 	folder         *gitdiscover.Repository
 	folderIconPath *gtk.Entry
@@ -24,9 +25,14 @@ func NewEditFolderWindow(mainWindow *MainWindow) *EditFolderWindow {
 
 func (e *EditFolderWindow) openWindow(folder *gitdiscover.Repository) {
 	// Create a new softBuilder
-	e.builder = NewGtkBuilder("editFolderWindow.ui", e.mainWindow.logger)
+	fw := framework.NewFramework()
+	builder, err := fw.Gtk.CreateBuilder("editFolderWindow.ui")
+	if err != nil {
+		panic(err)
+	}
+	e.builder = builder
 
-	window := e.builder.getObject("editFolderWindow").(*gtk.Window)
+	window := e.builder.GetObject("editFolderWindow").(*gtk.Window)
 	window.Connect("destroy", e.closeWindow)
 	window.SetTitle("Edit folder...")
 	window.HideOnDelete()
@@ -34,30 +40,30 @@ func (e *EditFolderWindow) openWindow(folder *gitdiscover.Repository) {
 	window.SetKeepAbove(true)
 	window.SetPosition(gtk.WIN_POS_CENTER_ALWAYS)
 
-	button := e.builder.getObject("cancelButton").(*gtk.Button)
+	button := e.builder.GetObject("cancelButton").(*gtk.Button)
 	button.Connect("clicked", e.closeWindow)
 
-	button = e.builder.getObject("saveButton").(*gtk.Button)
+	button = e.builder.GetObject("saveButton").(*gtk.Button)
 	button.Connect("clicked", e.save)
 
 	e.folder = folder
 
-	folderPath := e.builder.getObject("folderPathEntry").(*gtk.Entry)
+	folderPath := e.builder.GetObject("folderPathEntry").(*gtk.Entry)
 	folderPath.SetText(folder.Path)
 	folderPath.SetSensitive(false)
 
-	isGit := e.builder.getObject("isGitFolderCheckBox").(*gtk.CheckButton)
+	isGit := e.builder.GetObject("isGitFolderCheckBox").(*gtk.CheckButton)
 	isGit.SetActive(folder.IsGit)
 	isGit.SetSensitive(false)
 
-	e.image = e.builder.getObject("folderIconImage").(*gtk.Image)
+	e.image = e.builder.GetObject("folderIconImage").(*gtk.Image)
 
-	folderIconPath := e.builder.getObject("folderIconPathEntry").(*gtk.Entry)
+	folderIconPath := e.builder.GetObject("folderIconPathEntry").(*gtk.Entry)
 	folderIconPath.SetText(folder.ImagePath)
 	e.folderIconPath = folderIconPath
 	e.tryLoadIcon(folder.ImagePath)
 
-	button = e.builder.getObject("selectFolderIconPathButton").(*gtk.Button)
+	button = e.builder.GetObject("selectFolderIconPathButton").(*gtk.Button)
 	button.Connect("clicked", func() {
 		e.chooseIcon()
 

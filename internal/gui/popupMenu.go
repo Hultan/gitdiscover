@@ -1,10 +1,13 @@
 package gui
 
 import (
-	"github.com/gotk3/gotk3/gdk"
-	"github.com/gotk3/gotk3/gtk"
 	"io/ioutil"
 	"os"
+
+	"github.com/gotk3/gotk3/gdk"
+	"github.com/gotk3/gotk3/gtk"
+
+	"github.com/hultan/softteam/framework"
 )
 
 type PopupMenu struct {
@@ -27,15 +30,22 @@ func NewPopupMenu(window *MainWindow) *PopupMenu {
 }
 
 func (p *PopupMenu) Setup() {
-	p.popupMenu = p.mainWindow.builder.getObject("popupMenu").(*gtk.Menu)
+	// Create a new softBuilder
+	fw := framework.NewFramework()
+	builder, err := fw.Gtk.CreateBuilder("mainWindow.ui")
+	if err != nil {
+		panic(err)
+	}
 
-	p.popupAddFolder = p.mainWindow.builder.getObject("popupAddFolder").(*gtk.MenuItem)
-	p.popupEditFolder = p.mainWindow.builder.getObject("popupEditFolder").(*gtk.MenuItem)
-	p.popupRemoveFolder = p.mainWindow.builder.getObject("popupRemoveFolder").(*gtk.MenuItem)
-	p.popupExternalApplications = p.mainWindow.builder.getObject("popupExternalApplications").(*gtk.MenuItem)
-	p.popupGitStatus = p.mainWindow.builder.getObject("popupGitStatus").(*gtk.MenuItem)
-	p.popupGitDiff = p.mainWindow.builder.getObject("popupGitDiff").(*gtk.MenuItem)
-	p.popupGitLog = p.mainWindow.builder.getObject("popupGitLog").(*gtk.MenuItem)
+	p.popupMenu = builder.GetObject("popupMenu").(*gtk.Menu)
+
+	p.popupAddFolder = builder.GetObject("popupAddFolder").(*gtk.MenuItem)
+	p.popupEditFolder = builder.GetObject("popupEditFolder").(*gtk.MenuItem)
+	p.popupRemoveFolder = builder.GetObject("popupRemoveFolder").(*gtk.MenuItem)
+	p.popupExternalApplications = builder.GetObject("popupExternalApplications").(*gtk.MenuItem)
+	p.popupGitStatus = builder.GetObject("popupGitStatus").(*gtk.MenuItem)
+	p.popupGitDiff = builder.GetObject("popupGitDiff").(*gtk.MenuItem)
+	p.popupGitLog = builder.GetObject("popupGitLog").(*gtk.MenuItem)
 
 	p.setupEvents()
 }

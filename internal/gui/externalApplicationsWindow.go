@@ -2,13 +2,16 @@ package gui
 
 import (
 	"github.com/gotk3/gotk3/gtk"
+
 	"github.com/hultan/gitdiscover/internal/config"
+	"github.com/hultan/softteam/framework"
+
 	"github.com/sirupsen/logrus"
 )
 
 type ExternalApplicationsWindow struct {
 	window  *gtk.Window
-	builder *GtkBuilder
+	builder *framework.GtkBuilder
 	config  *config.Config
 	logger  *logrus.Logger
 	listBox *gtk.ListBox
@@ -25,9 +28,14 @@ func NewExternalApplicationsWindow(logger *logrus.Logger, config *config.Config)
 
 func (e *ExternalApplicationsWindow) openWindow(refresh func()) {
 	// Create a new softBuilder
-	e.builder = NewGtkBuilder("externalApplicationsWindow.ui", e.logger)
+	fw := framework.NewFramework()
+	builder, err := fw.Gtk.CreateBuilder("externalApplicationsWindow.ui")
+	if err != nil {
+		panic(err)
+	}
+	e.builder = builder
 
-	window := e.builder.getObject("externalApplicationsWindow").(*gtk.Window)
+	window := e.builder.GetObject("externalApplicationsWindow").(*gtk.Window)
 	window.Connect("destroy", e.closeWindow)
 	window.SetTitle("External Applications...")
 	window.HideOnDelete()
@@ -35,18 +43,18 @@ func (e *ExternalApplicationsWindow) openWindow(refresh func()) {
 	window.SetKeepAbove(true)
 	window.SetPosition(gtk.WIN_POS_CENTER_ALWAYS)
 
-	button := e.builder.getObject("closeButton").(*gtk.Button)
+	button := e.builder.GetObject("closeButton").(*gtk.Button)
 	button.Connect("clicked", e.closeWindow)
 
 	// Toolbar
-	tool := e.builder.getObject("toolbarAddApplication").(*gtk.ToolButton)
+	tool := e.builder.GetObject("toolbarAddApplication").(*gtk.ToolButton)
 	tool.Connect("clicked", e.addExternalApplication)
-	tool = e.builder.getObject("toolbarRemoveApplication").(*gtk.ToolButton)
+	tool = e.builder.GetObject("toolbarRemoveApplication").(*gtk.ToolButton)
 	tool.Connect("clicked", e.removeExternalApplication)
-	tool = e.builder.getObject("toolbarEditApplication").(*gtk.ToolButton)
+	tool = e.builder.GetObject("toolbarEditApplication").(*gtk.ToolButton)
 	tool.Connect("clicked", e.editExternalApplication)
 
-	e.listBox = e.builder.getObject("externalApplicationsList").(*gtk.ListBox)
+	e.listBox = e.builder.GetObject("externalApplicationsList").(*gtk.ListBox)
 	e.listBox.SetActivateOnSingleClick(false)
 	e.listBox.Connect("row-activated", func(listbox *gtk.ListBox, row *gtk.ListBoxRow) {
 		index := row.GetIndex()
