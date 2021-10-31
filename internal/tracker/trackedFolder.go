@@ -8,6 +8,22 @@ import (
 	"time"
 )
 
+type ByName struct { TrackedFolders }
+
+func (b ByName) Less(i,j int) bool {
+	if b.TrackedFolders[i].IsGit() && !b.TrackedFolders[j].IsGit() { return true }
+	if b.TrackedFolders[j].IsGit() && !b.TrackedFolders[i].IsGit() { return false }
+	return b.TrackedFolders[i].name < b.TrackedFolders[j].name
+}
+
+type ByModifiedDate struct { TrackedFolders }
+
+func (b ByModifiedDate) Less(i,j int) bool {
+	if b.TrackedFolders[i].IsGit() && !b.TrackedFolders[j].IsGit() { return true }
+	if b.TrackedFolders[j].IsGit() && !b.TrackedFolders[i].IsGit() { return false }
+	return b.TrackedFolders[i].ModifiedDate().After(b.TrackedFolders[j].ModifiedDate())
+}
+
 type TrackedFolders []*TrackedFolder
 
 type TrackedFolder struct {
@@ -24,6 +40,9 @@ func NewFolder(folder string) *TrackedFolder {
 	f.Refresh()
 	return &f
 }
+
+func (f TrackedFolders) Len() int { return len(f) }
+func (f TrackedFolders) Swap(i, j int) { f[i], f[j] = f[j],f[i] }
 
 func (f *TrackedFolder) Refresh() {
 	f.name = path.Base(f.path)

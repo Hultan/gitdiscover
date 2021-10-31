@@ -30,6 +30,8 @@ type MainWindow struct {
 	tracker           *tracker.Tracker
 	infoBar           *InfoBar
 	toolBar           *gtk.Toolbar
+	sortByButton      *gtk.ToggleToolButton
+	sortBy            SortByColumn
 }
 
 // NewMainWindow : Creates a new MainWindow object
@@ -124,6 +126,11 @@ func (m *MainWindow) setupToolBar() {
 	button = m.builder.GetObject("toolbarRefreshButton").(*gtk.ToolButton)
 	_ = button.Connect("clicked", m.refreshRepositoryList)
 
+	// Sort by button
+	toggle := m.builder.GetObject("toggleSortBy").(*gtk.ToggleToolButton)
+	m.sortByButton = toggle
+	_ = toggle.Connect("toggled", m.toggleSortBy)
+
 	m.refreshExternalApplications(m.toolBar)
 }
 
@@ -208,21 +215,11 @@ func (m *MainWindow) refreshRepositoryList() {
 
 	m.tracker = tracker.NewTracker(m.config)
 
-	// Sort the git status string after modified date of the .git folder
-	sort.Slice(m.tracker.Folders, func(i, j int) bool {
-		// Make sure that non-git dirs sorts last
-		if !m.tracker.Folders[i].IsGit() {
-			return false
-		}
-		if !m.tracker.Folders[j].IsGit() {
-			return true
-		}
-
-		// Sort by date
-		date1 := m.tracker.Folders[i].ModifiedDate()
-		date2 := m.tracker.Folders[j].ModifiedDate()
-		return date1.After(date2)
-	})
+	if m.sortBy == SortByName {
+		sort.Sort(tracker.ByName{TrackedFolders: m.tracker.Folders})
+	} else {
+		sort.Sort(tracker.ByModifiedDate{TrackedFolders: m.tracker.Folders})
+	}
 
 	sgDate, _ := gtk.SizeGroupNew(gtk.SIZE_GROUP_BOTH)
 
@@ -514,4 +511,15 @@ func (m *MainWindow) refreshExternalApplications(toolbar *gtk.Toolbar) {
 		toolbar.Add(toolButton)
 	}
 	toolbar.ShowAll()
+}
+
+func (m *MainWindow) toggleSortBy() {
+	if m.sortByButton.GetActive() {
+		m.sortByButton.SetLabel("Sort by : Modified date")
+		m.sortBy = SortByModifiedDate
+	} else {
+		m.sortByButton.SetLabel("Sort by : Name")
+		m.sortBy = SortByName
+	}
+	m.refreshRepositoryList()
 }
