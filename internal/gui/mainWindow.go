@@ -30,8 +30,11 @@ type MainWindow struct {
 	tracker           *tracker.Tracker
 	infoBar           *InfoBar
 	toolBar           *gtk.Toolbar
-	sortByButton      *gtk.ToggleToolButton
-	sortBy            SortByColumn
+
+	sortBy             SortByColumn
+	sortByName         *gtk.RadioMenuItem
+	sortByModifiedDate *gtk.RadioMenuItem
+	sortByChanges      *gtk.RadioMenuItem
 }
 
 // NewMainWindow : Creates a new MainWindow object
@@ -126,11 +129,6 @@ func (m *MainWindow) setupToolBar() {
 	button = m.builder.GetObject("toolbarRefreshButton").(*gtk.ToolButton)
 	_ = button.Connect("clicked", m.refreshRepositoryList)
 
-	// Sort by button
-	toggle := m.builder.GetObject("toggleSortBy").(*gtk.ToggleToolButton)
-	m.sortByButton = toggle
-	_ = toggle.Connect("toggled", m.toggleSortBy)
-
 	m.refreshExternalApplications(m.toolBar)
 }
 
@@ -138,6 +136,17 @@ func (m *MainWindow) setupMenuBar() {
 	// File menu
 	button := m.builder.GetObject("menuFileQuit").(*gtk.MenuItem)
 	_ = button.Connect("activate", m.window.Close)
+
+	// View menu
+	m.sortByName = m.builder.GetObject("mnuSortByName").(*gtk.RadioMenuItem)
+	m.sortByName.SetActive(true)
+	_ = m.sortByName.Connect("activate", m.toggleSortBy)
+	m.sortByModifiedDate = m.builder.GetObject("mnuSortByModifiedDate").(*gtk.RadioMenuItem)
+	m.sortByModifiedDate.JoinGroup(m.sortByName)
+	_ = m.sortByModifiedDate.Connect("activate", m.toggleSortBy)
+	m.sortByChanges = m.builder.GetObject("mnuSortByChanges").(*gtk.RadioMenuItem)
+	m.sortByChanges.JoinGroup(m.sortByName)
+	_ = m.sortByChanges.Connect("activate", m.toggleSortBy)
 
 	// Edit menu
 	button = m.builder.GetObject("menuEditExternalApplications").(*gtk.MenuItem)
@@ -215,10 +224,13 @@ func (m *MainWindow) refreshRepositoryList() {
 
 	m.tracker = tracker.NewTracker(m.config)
 
-	if m.sortBy == SortByName {
+	switch m.sortBy {
+	case SortByName:
 		sort.Sort(tracker.ByName{TrackedFolders: m.tracker.Folders})
-	} else {
+	case SortByModifiedDate:
 		sort.Sort(tracker.ByModifiedDate{TrackedFolders: m.tracker.Folders})
+	case SortByChanges:
+		sort.Sort(tracker.ByChanges{TrackedFolders: m.tracker.Folders})
 	}
 
 	sgDate, _ := gtk.SizeGroupNew(gtk.SIZE_GROUP_BOTH)
@@ -513,13 +525,25 @@ func (m *MainWindow) refreshExternalApplications(toolbar *gtk.Toolbar) {
 	toolbar.ShowAll()
 }
 
-func (m *MainWindow) toggleSortBy() {
-	if m.sortByButton.GetActive() {
-		m.sortByButton.SetLabel("Sort by : Modified date")
-		m.sortBy = SortByModifiedDate
-	} else {
-		m.sortByButton.SetLabel("Sort by : Name")
+func (m *MainWindow) toggleSortBy(radio *gtk.RadioMenuItem) {
+	if !radio.GetActive() {
+		return
+	}
+
+	name := radio.GetLabel()
+	switch name {
+	case "Name":
 		m.sortBy = SortByName
+		// m.sortByModifiedDate.SetActive(false)
+		// m.sortByChanges.SetActive(false)
+	case "Modified date":
+		m.sortBy = SortByModifiedDate
+		// m.sortByName.SetActive(false)
+		// m.sortByChanges.SetActive(false)
+	case "Changes":
+		m.sortBy = SortByChanges
+		// m.sortByName.SetActive(false)
+		// m.sortByModifiedDate.SetActive(false)
 	}
 	m.refreshRepositoryList()
 }

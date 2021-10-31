@@ -39,6 +39,47 @@
               </object>
             </child>
             <child>
+              <object class="GtkMenuItem" id="mnuSortBy">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="label" translatable="yes">Sort</property>
+                <property name="use-underline">True</property>
+                <child type="submenu">
+                  <object class="GtkMenu">
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                    <child>
+                      <object class="GtkRadioMenuItem" id="mnuSortByName">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="label" translatable="yes">Name</property>
+                        <property name="use-underline">True</property>
+                        <property name="draw-as-radio">True</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkRadioMenuItem" id="mnuSortByModifiedDate">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="label" translatable="yes">Modified date</property>
+                        <property name="use-underline">True</property>
+                        <property name="draw-as-radio">True</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkRadioMenuItem" id="mnuSortByChanges">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="label" translatable="yes">Changes</property>
+                        <property name="use-underline">True</property>
+                        <property name="draw-as-radio">True</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <child>
               <object class="GtkMenuItem">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
@@ -198,29 +239,6 @@
                 <property name="label" translatable="yes">Remove</property>
                 <property name="use-underline">True</property>
                 <property name="stock-id">gtk-remove</property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="homogeneous">True</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkSeparatorToolItem">
-                <property name="visible">True</property>
-                <property name="can-focus">False</property>
-                <property name="is-important">True</property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="homogeneous">False</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkToggleToolButton" id="toggleSortBy">
-                <property name="visible">True</property>
-                <property name="can-focus">False</property>
-                <property name="label" translatable="yes">Sort by : Name</property>
-                <property name="use-underline">True</property>
               </object>
               <packing>
                 <property name="expand">False</property>
