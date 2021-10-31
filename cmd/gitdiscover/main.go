@@ -29,16 +29,12 @@ func main() {
 	}
 
 	// Get repository list
-	gitDiscover := gitdiscover.NewGit(config, logger)
-	gitStatuses, err := gitDiscover.GetRepositories()
-	if err != nil {
-		exitProgram(exitUnknown, err)
-	}
+	git := gitdiscover.NewGit(config, logger)
 
 	// Sort the git status string after modified date of the .git folder
-	sort.Slice(gitStatuses, func(i, j int) bool {
-		date1 := gitStatuses[i].ModifiedDate
-		date2 := gitStatuses[j].ModifiedDate
+	sort.Slice(git.Repos, func(i, j int) bool {
+		date1 := git.Repos[i].ModifiedDate
+		date2 := git.Repos[j].ModifiedDate
 		if date1 == nil || date2 == nil {
 			return false
 		}
@@ -49,7 +45,7 @@ func main() {
 	fmt.Println("Git Repository Statuses : ")
 	logger.Info("Git Repository Statuses : ")
 	fmt.Println("_______________________")
-	for _, status := range gitStatuses {
+	for _, status := range git.Repos {
 		var text = ""
 		if status.ModifiedDate == nil {
 			text = fmt.Sprintf("%v - %v - %v", "2006-01-02, kl. 15:04", status.Path, status.Status)

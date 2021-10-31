@@ -17,12 +17,8 @@ func TestDiscover_GetRepositories(t *testing.T) {
 	discover := NewGit(config, logger)
 	assert.NotNil(t, discover)
 
-	repos, err := discover.GetRepositories()
-	if err != nil {
-		assert.Empty(t, err)
-	}
-	assert.NotEmpty(t, repos[4].Status)
-	assert.NotNil(t, repos[4].ModifiedDate)
+	assert.NotEmpty(t, discover.Repos[4].Status)
+	assert.NotNil(t, discover.Repos[4].ModifiedDate)
 }
 
 func TestDiscover_GetRepositoriesByNameAndPath(t *testing.T) {

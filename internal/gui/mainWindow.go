@@ -27,7 +27,7 @@ type MainWindow struct {
 	builder           *framework.GtkBuilder
 	window            *gtk.ApplicationWindow
 	repositoryListBox *gtk.ListBox
-	repositories      []*gitdiscover.Repository
+	git               *gitdiscover.Git
 	infoBar           *InfoBar
 	toolBar           *gtk.Toolbar
 }
@@ -97,7 +97,7 @@ func (m *MainWindow) closeMainWindow() {
 	m.window.Close()
 	m.repositoryListBox.Destroy()
 	m.repositoryListBox = nil
-	m.repositories = nil
+	m.git = nil
 	m.window.Destroy()
 	m.window = nil
 	m.builder = nil
@@ -164,7 +164,7 @@ func (m *MainWindow) addButtonClicked() {
 		return
 	}
 
-	imagePath := filepath.Join(dialog.GetFilename(),"assets/application.png")
+	imagePath := filepath.Join(dialog.GetFilename(), "assets/application.png")
 	repo := gitConfig.Repository{Path: dialog.GetFilename(), ImagePath: imagePath}
 	m.config.Repositories = append(m.config.Repositories, repo)
 	m.config.Save()
@@ -175,7 +175,7 @@ func (m *MainWindow) addButtonClicked() {
 
 func (m *MainWindow) editButtonClicked() {
 	folder := m.getSelectedRepo()
-	if folder ==nil {
+	if folder == nil {
 		// TODO : Handle this error, must select folder
 		return
 	}
@@ -206,39 +206,32 @@ func (m *MainWindow) refreshRepositoryList() {
 	// Clear list
 	m.clearList()
 
-	git := gitdiscover.NewGit(m.config, m.logger)
-	repos, err := git.GetRepositories()
-	if err != nil {
-		m.logger.Panic(err)
-		panic(err)
-	}
+	m.git = gitdiscover.NewGit(m.config, m.logger)
 
 	// Sort the git status string after modified date of the .git folder
-	sort.Slice(repos, func(i, j int) bool {
+	sort.Slice(m.git.Repos, func(i, j int) bool {
 		// Make sure that non-git dirs sorts last
-		if !repos[i].IsGit {
+		if !m.git.Repos[i].IsGit {
 			return false
 		}
-		if !repos[j].IsGit {
+		if !m.git.Repos[j].IsGit {
 			return true
 		}
 
 		// Sort by date
-		date1 := repos[i].ModifiedDate
-		date2 := repos[j].ModifiedDate
+		date1 := m.git.Repos[i].ModifiedDate
+		date2 := m.git.Repos[j].ModifiedDate
 		if date1 == nil || date2 == nil {
 			return false
 		}
 		return (*date1).After(*date2)
 	})
 
-	m.repositories = repos
-
 	sgDate, _ := gtk.SizeGroupNew(gtk.SIZE_GROUP_BOTH)
 
 	// Fill list
-	for i := range m.repositories {
-		repo := m.repositories[i]
+	for i := range m.git.Repos {
+		repo := m.git.Repos[i]
 		listItem := m.createListItem(i, m.config.DateFormat, repo, sgDate)
 		m.repositoryListBox.Add(listItem)
 	}
@@ -247,7 +240,7 @@ func (m *MainWindow) refreshRepositoryList() {
 
 	// Find where to insert the "Misc folders" separator
 	var index = -1
-	for i, repo := range repos {
+	for i, repo := range m.git.Repos {
 		if !repo.IsGit {
 			index = i
 			break
@@ -256,7 +249,7 @@ func (m *MainWindow) refreshRepositoryList() {
 
 	if index != -1 {
 		sepItem = m.createListSeparator("NON-GIT FOLDERS")
-		m.repositoryListBox.Insert(sepItem, index + 1)
+		m.repositoryListBox.Insert(sepItem, index+1)
 	}
 
 	m.repositoryListBox.ShowAll()
@@ -269,7 +262,7 @@ func (m *MainWindow) clearList() {
 		return
 	}
 	var i uint = 0
-	for ; i < children.Length(); {
+	for i < children.Length() {
 		widget, _ := children.NthData(i).(*gtk.Widget)
 		m.repositoryListBox.Remove(widget)
 		widget.Destroy()
@@ -398,7 +391,7 @@ func (m *MainWindow) getSelectedRepo() *gitdiscover.Repository {
 		m.infoBar.ShowError(err.Error())
 		return nil
 	}
-	if name=="sep" {
+	if name == "sep" {
 		return nil
 	}
 	indexString := name[4:]
@@ -407,7 +400,7 @@ func (m *MainWindow) getSelectedRepo() *gitdiscover.Repository {
 		m.infoBar.ShowError(err.Error())
 		return nil
 	}
-	repo := m.repositories[index]
+	repo := m.git.Repos[index]
 	repo.Path = strings.Trim(repo.Path, " ")
 
 	return repo
@@ -459,10 +452,10 @@ func (m *MainWindow) executeCommand(command, arguments string) string {
 	// Forces the new process to detach from the GitDiscover process
 	// so that it does not die when GitDiscover dies
 	// https://stackoverflow.com/questions/62853835/how-to-use-syscall-sysprocattr-struct-fields-for-windows-when-os-is-set-for-linu
-	//cmd.SysProcAttr = &syscall.SysProcAttr{
+	// cmd.SysProcAttr = &syscall.SysProcAttr{
 	//	Setpgid: true,
 	//	Pgid:    0,
-	//}
+	// }
 
 	// set the output to our variable
 	out, err := cmd.CombinedOutput()

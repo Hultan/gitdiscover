@@ -23,20 +23,29 @@ type Repository struct {
 }
 
 type Git struct {
-	Logger      *logrus.Logger
-	Config       *gitConfig.Config
-	Repositories []*Repository
+	Logger *logrus.Logger
+	Config *gitConfig.Config
+	Repos  []*Repository
 }
 
 func NewGit(config *gitConfig.Config, logger *logrus.Logger) *Git {
-	git := new(Git)
-	git.Config = config
-	git.Logger = logger
-	git.GetRepositories()
+	git := &Git{logger, config, nil}
+	git.Refresh()
+
 	return git
 }
 
-func (g *Git) GetRepositories() ([]*Repository, error) {
+func (g *Git) Refresh() error {
+	repos, err := g.getRepositories()
+	if err != nil {
+		return nil
+	}
+	g.Repos = repos
+
+	return nil
+}
+
+func (g *Git) getRepositories() ([]*Repository, error) {
 	// Get the git statuses of the paths in the config
 	var directories []*Repository
 
@@ -45,10 +54,10 @@ func (g *Git) GetRepositories() ([]*Repository, error) {
 		gitPath := path.Join(basePath, ".git")
 
 		dir := Repository{
-			Path: basePath,
-			ImagePath: repo.ImagePath,
+			Path:         basePath,
+			ImagePath:    repo.ImagePath,
 			ModifiedDate: g.getModifiedDate(repo.Path),
-			Name : path.Base(repo.Path),
+			Name:         path.Base(repo.Path),
 		}
 
 		if _, err := os.Stat(gitPath); os.IsNotExist(err) {
@@ -62,8 +71,6 @@ func (g *Git) GetRepositories() ([]*Repository, error) {
 
 		directories = append(directories, &dir)
 	}
-
-	g.Repositories = directories
 
 	return directories, nil
 }
@@ -97,9 +104,9 @@ func (g *Git) createPathFormatString() string {
 }
 
 func (g *Git) GetRepositoryByName(name string) []*Repository {
-	repos := make([]*Repository,0)
+	repos := make([]*Repository, len(g.Repos))
 
-	for _, repo := range g.Repositories {
+	for _, repo := range g.Repos {
 		if repo.Name == name {
 			repos = append(repos, repo)
 		}
@@ -108,7 +115,7 @@ func (g *Git) GetRepositoryByName(name string) []*Repository {
 }
 
 func (g *Git) GetRepositoryByPath(path string) *Repository {
-	for _, repo := range g.Repositories {
+	for _, repo := range g.Repos {
 		if repo.Path == path {
 			return repo
 		}
