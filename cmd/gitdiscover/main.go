@@ -3,13 +3,11 @@ package main
 import (
 	"fmt"
 	"os"
-	"sort"
 
 	"github.com/gotk3/gotk3/gtk"
 	"github.com/sirupsen/logrus"
 
 	gitConfig "github.com/hultan/gitdiscover/internal/config"
-	"github.com/hultan/gitdiscover/internal/gitdiscover"
 	"github.com/hultan/gitdiscover/internal/gui"
 )
 
@@ -22,45 +20,12 @@ func main() {
 	logger = startLogging()
 	config := loadConfig()
 
-	// Check if GUI is reuqested
-	if len(os.Args) > 1 {
-		logger.Info("Starting GitDiscover GUI!")
-		showGUI(logger, config)
-	}
-
-	// Get repository list
-	git := gitdiscover.NewGit(config, logger)
-
-	// Sort the git status string after modified date of the .git folder
-	sort.Slice(git.Repos, func(i, j int) bool {
-		date1 := git.Repos[i].ModifiedDate
-		date2 := git.Repos[j].ModifiedDate
-		if date1 == nil || date2 == nil {
-			return false
-		}
-		return (*date1).After(*date2)
-	})
-
-	// Print out the git statuses
-	fmt.Println("Git Repository Statuses : ")
-	logger.Info("Git Repository Statuses : ")
-	fmt.Println("_______________________")
-	for _, status := range git.Repos {
-		var text = ""
-		if status.ModifiedDate == nil {
-			text = fmt.Sprintf("%v - %v - %v", "2006-01-02, kl. 15:04", status.Path, status.Status)
-		} else {
-			text = fmt.Sprintf("%s - %s - %s", status.ModifiedDate.Format(config.DateFormat), status.Path, status.Status)
-		}
-		fmt.Println(text)
-		logger.Info(text)
-	}
-
-	exitProgram(exitNormal, nil)
+	logger.Info("Starting GitDiscover GUI!")
+	showGUI(logger, config)
 }
 
 func exitProgram(exitCode int, err error) {
-	if err!=nil {
+	if err != nil {
 		fmt.Println(err)
 		logger.Error(err)
 	}
@@ -98,21 +63,11 @@ func startLogging() *logrus.Logger {
 
 func loadConfig() *gitConfig.Config {
 	config := gitConfig.NewConfig()
-	if config.ConfigExists() {
-		// Existing config file
-		err := config.Load()
-		if err != nil {
-			exitProgram(exitConfigError, err)
-		}
-	} else {
-		// New config file
-		err := config.CreateEmptyConfig()
-		if err!=nil {
-			exitProgram(exitConfigError, err)
-		}
-		fmt.Println("done!")
+	// Existing config file
+	err := config.Load()
+	if err != nil {
+		exitProgram(exitConfigError, err)
 	}
-
 	return config
 }
 

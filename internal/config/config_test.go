@@ -43,8 +43,3 @@ func TestConfig_getHomeDirectory(t *testing.T) {
 	home := config.getHomeDirectory()
 	assert.Equal(t, "/home/per", home)
 }
-
-func TestConfig_ConfigExists(t *testing.T) {
-	config := NewConfig()
-	assert.True(t, config.ConfigExists())
-}

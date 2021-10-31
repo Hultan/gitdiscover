@@ -104,49 +104,10 @@ func (config *Config) getHomeDirectory() string {
 	return u.HomeDir
 }
 
-func (config *Config) ConfigExists() bool {
-	configPath := config.GetConfigPath()
-	if _, err := os.Stat(configPath); err == nil {
-		return true
-	} else if os.IsNotExist(err) {
-		return false
-	} else {
-		return false
-	}
-}
-
-func (config *Config) CreateEmptyConfig() error {
-	f, err := os.Create(config.GetConfigPath())
-	if err != nil {
-		return err
-	}
-	_, err = f.WriteString(emptyConfig)
-	if err != nil {
-		_ = f.Close()
-		return err
-	}
-	err = f.Close()
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 func (config *Config) GetExternalApplicationByName(name string) *ExternalApplication {
 	for i := range config.ExternalApplications {
 		ext := config.ExternalApplications[i]
 		if ext.Name == name {
-			return &ext
-		}
-	}
-
-	return nil
-}
-
-func (config *Config) GetRepositoryByPath(path string) *Repository {
-	for i := range config.Repositories {
-		ext := config.Repositories[i]
-		if ext.Path == path {
 			return &ext
 		}
 	}

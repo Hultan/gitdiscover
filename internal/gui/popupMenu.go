@@ -139,7 +139,7 @@ func (p *PopupMenu) runGitCommand(command string, outputType OutputType) {
 	}
 	p.mainWindow.infoBar.hideInfoBar()
 
-	file, err := p.createFile(repo.Path, command)
+	file, err := p.createFile(repo.Path(), command)
 	if err != nil {
 		p.mainWindow.logger.Error(err)
 		p.mainWindow.infoBar.ShowError(err.Error())

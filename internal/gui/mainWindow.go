@@ -14,7 +14,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	gitConfig "github.com/hultan/gitdiscover/internal/config"
-	"github.com/hultan/gitdiscover/internal/gitdiscover"
+	"github.com/hultan/gitdiscover/internal/tracker"
 	"github.com/hultan/softteam/framework"
 )
 
@@ -27,7 +27,7 @@ type MainWindow struct {
 	builder           *framework.GtkBuilder
 	window            *gtk.ApplicationWindow
 	repositoryListBox *gtk.ListBox
-	git               *gitdiscover.Git
+	tracker           *tracker.Tracker
 	infoBar           *InfoBar
 	toolBar           *gtk.Toolbar
 }
@@ -97,7 +97,7 @@ func (m *MainWindow) closeMainWindow() {
 	m.window.Close()
 	m.repositoryListBox.Destroy()
 	m.repositoryListBox = nil
-	m.git = nil
+	m.tracker = nil
 	m.window.Destroy()
 	m.window = nil
 	m.builder = nil
@@ -189,7 +189,7 @@ func (m *MainWindow) removeButtonClicked() {
 		return
 	}
 
-	trimmedPath := strings.Trim(repo.Path, " ")
+	trimmedPath := strings.Trim(repo.Path(), " ")
 
 	for i, repository := range m.config.Repositories {
 		if repository.Path == trimmedPath {
@@ -206,32 +206,29 @@ func (m *MainWindow) refreshRepositoryList() {
 	// Clear list
 	m.clearList()
 
-	m.git = gitdiscover.NewGit(m.config, m.logger)
+	m.tracker = tracker.NewTracker(m.config)
 
 	// Sort the git status string after modified date of the .git folder
-	sort.Slice(m.git.Repos, func(i, j int) bool {
+	sort.Slice(m.tracker.Folders, func(i, j int) bool {
 		// Make sure that non-git dirs sorts last
-		if !m.git.Repos[i].IsGit {
+		if !m.tracker.Folders[i].IsGit() {
 			return false
 		}
-		if !m.git.Repos[j].IsGit {
+		if !m.tracker.Folders[j].IsGit() {
 			return true
 		}
 
 		// Sort by date
-		date1 := m.git.Repos[i].ModifiedDate
-		date2 := m.git.Repos[j].ModifiedDate
-		if date1 == nil || date2 == nil {
-			return false
-		}
-		return (*date1).After(*date2)
+		date1 := m.tracker.Folders[i].ModifiedDate()
+		date2 := m.tracker.Folders[j].ModifiedDate()
+		return date1.After(date2)
 	})
 
 	sgDate, _ := gtk.SizeGroupNew(gtk.SIZE_GROUP_BOTH)
 
 	// Fill list
-	for i := range m.git.Repos {
-		repo := m.git.Repos[i]
+	for i := range m.tracker.Folders {
+		repo := m.tracker.Folders[i]
 		listItem := m.createListItem(i, m.config.DateFormat, repo, sgDate)
 		m.repositoryListBox.Add(listItem)
 	}
@@ -240,8 +237,8 @@ func (m *MainWindow) refreshRepositoryList() {
 
 	// Find where to insert the "Misc folders" separator
 	var index = -1
-	for i, repo := range m.git.Repos {
-		if !repo.IsGit {
+	for i, repo := range m.tracker.Folders {
+		if !repo.IsGit() {
 			index = i
 			break
 		}
@@ -291,7 +288,7 @@ func (m *MainWindow) createListSeparator(text string) *gtk.Box {
 	return box
 }
 
-func (m *MainWindow) createListItem(index int, dateFormat string, repo *gitdiscover.Repository,
+func (m *MainWindow) createListItem(index int, dateFormat string, repo *tracker.TrackedFolder,
 	sgDate *gtk.SizeGroup) *gtk.Box {
 
 	// Create main box
@@ -303,10 +300,10 @@ func (m *MainWindow) createListItem(index int, dateFormat string, repo *gitdisco
 	box.SetName(fmt.Sprintf("box_%v", index))
 
 	// Icon
-	iconPath := repo.ImagePath
+	iconPath := repo.ImagePath()
 	if !fileExists(iconPath) {
 		// General icon for project that don't have one
-		if repo.IsGit {
+		if repo.IsGit() {
 			iconPath, err = getResourcePath("gitFolder.png")
 		} else {
 			iconPath, err = getResourcePath("folder.png")
@@ -334,32 +331,25 @@ func (m *MainWindow) createListItem(index int, dateFormat string, repo *gitdisco
 		m.logger.Panic(err)
 		panic(err)
 	}
-	var text = ""
-	if repo.ModifiedDate == nil {
-		text = `<span font="Sans Regular 10" foreground="#44DD44"></span>`
-	} else {
-		text = `<span font="Sans Regular 10" foreground="#44DD44">` + repo.ModifiedDate.Format(dateFormat) + `</span>`
-	}
-	label.SetMarkup(text)
+	label.SetMarkup(`<span font="Sans Regular 10" foreground="#44DD44">` + repo.ModifiedDate().Format(dateFormat) + `</span>`)
 	label.SetName("lblDate")
 	sgDate.AddWidget(label)
 	label.SetXAlign(0.0)
 	box.PackStart(label, false, false, 10)
 
-	// Status
+	// GitStatus
 	label, err = gtk.LabelNew("")
 	if err != nil {
 		m.logger.Panic(err)
 		panic(err)
 	}
-	text = `<span font="Sans Regular 10" foreground="#44DD44">` + repo.Status + `</span>`
-	label.SetMarkup(text)
+	label.SetMarkup(`<span font="Sans Regular 10" foreground="#44DD44">` + repo.GitStatus() + `</span>`)
 	label.SetName("lblStatus")
 	label.SetHAlign(gtk.ALIGN_START)
 	box.PackEnd(label, false, false, 10)
 
 	// Path
-	label, err = gtk.LabelNew(repo.Path)
+	label, err = gtk.LabelNew(repo.Path())
 	if err != nil {
 		m.logger.Panic(err)
 		panic(err)
@@ -371,7 +361,7 @@ func (m *MainWindow) createListItem(index int, dateFormat string, repo *gitdisco
 	return box
 }
 
-func (m *MainWindow) getSelectedRepo() *gitdiscover.Repository {
+func (m *MainWindow) getSelectedRepo() *tracker.TrackedFolder {
 	row := m.repositoryListBox.GetSelectedRow()
 	if row == nil {
 		return nil
@@ -400,8 +390,7 @@ func (m *MainWindow) getSelectedRepo() *gitdiscover.Repository {
 		m.infoBar.ShowError(err.Error())
 		return nil
 	}
-	repo := m.git.Repos[index]
-	repo.Path = strings.Trim(repo.Path, " ")
+	repo := m.tracker.Folders[index]
 
 	return repo
 }
@@ -418,7 +407,7 @@ func (m *MainWindow) openLog() {
 	}()
 }
 
-func (m *MainWindow) openInExternalApplication(name string, repo *gitdiscover.Repository) {
+func (m *MainWindow) openInExternalApplication(name string, repo *tracker.TrackedFolder) {
 	// Find application
 	app := m.config.GetExternalApplicationByName(name)
 	if app == nil {
@@ -437,8 +426,8 @@ func (m *MainWindow) openInExternalApplication(name string, repo *gitdiscover.Re
 	var argument = ""
 
 	if repo != nil {
-		argument = strings.Replace(app.Argument, "%PATH%", repo.Path, -1)
-		argument = strings.Replace(argument, "%IMAGEPATH%", repo.ImagePath, -1)
+		argument = strings.Replace(app.Argument, "%PATH%", repo.Path(), -1)
+		argument = strings.Replace(argument, "%IMAGEPATH%", repo.ImagePath(), -1)
 	}
 
 	m.logger.Info("Trying to open external application: ", app.Command, " ", argument)

@@ -4,7 +4,7 @@ import (
 	"github.com/gotk3/gotk3/gdk"
 	"github.com/gotk3/gotk3/gtk"
 
-	"github.com/hultan/gitdiscover/internal/gitdiscover"
+	"github.com/hultan/gitdiscover/internal/tracker"
 	"github.com/hultan/softteam/framework"
 )
 
@@ -13,7 +13,7 @@ type EditFolderWindow struct {
 	window         *gtk.Window
 	builder        *framework.GtkBuilder
 	image          *gtk.Image
-	folder         *gitdiscover.Repository
+	folder         *tracker.TrackedFolder
 	folderIconPath *gtk.Entry
 }
 
@@ -23,7 +23,7 @@ func NewEditFolderWindow(mainWindow *MainWindow) *EditFolderWindow {
 	return edit
 }
 
-func (e *EditFolderWindow) openWindow(folder *gitdiscover.Repository) {
+func (e *EditFolderWindow) openWindow(folder *tracker.TrackedFolder) {
 	// Create a new softBuilder
 	fw := framework.NewFramework()
 	builder, err := fw.Gtk.CreateBuilder("editFolderWindow.ui")
@@ -49,19 +49,19 @@ func (e *EditFolderWindow) openWindow(folder *gitdiscover.Repository) {
 	e.folder = folder
 
 	folderPath := e.builder.GetObject("folderPathEntry").(*gtk.Entry)
-	folderPath.SetText(folder.Path)
+	folderPath.SetText(folder.Path())
 	folderPath.SetSensitive(false)
 
 	isGit := e.builder.GetObject("isGitFolderCheckBox").(*gtk.CheckButton)
-	isGit.SetActive(folder.IsGit)
+	isGit.SetActive(folder.IsGit())
 	isGit.SetSensitive(false)
 
 	e.image = e.builder.GetObject("folderIconImage").(*gtk.Image)
 
 	folderIconPath := e.builder.GetObject("folderIconPathEntry").(*gtk.Entry)
-	folderIconPath.SetText(folder.ImagePath)
+	folderIconPath.SetText(folder.ImagePath())
 	e.folderIconPath = folderIconPath
-	e.tryLoadIcon(folder.ImagePath)
+	e.tryLoadIcon(folder.ImagePath())
 
 	button = e.builder.GetObject("selectFolderIconPathButton").(*gtk.Button)
 	button.Connect("clicked", func() {
@@ -78,7 +78,7 @@ func (e *EditFolderWindow) save() {
 	if err != nil {
 		e.mainWindow.logger.Error(err)
 	} else {
-		e.folder.Path = path
+		e.folder.SetPath(path)
 		e.mainWindow.config.Save()
 	}
 	e.closeWindow()
@@ -94,7 +94,7 @@ func (e *EditFolderWindow) tryLoadIcon(path string) {
 	if err != nil {
 		e.mainWindow.logger.Error(err)
 		var iconPath = ""
-		if e.folder.IsGit {
+		if e.folder.IsGit() {
 			iconPath, err = getResourcePath("gitFolder.png")
 		} else {
 			iconPath, err = getResourcePath("folder.png")
@@ -135,7 +135,7 @@ func (e *EditFolderWindow) chooseIcon() {
 	fileFilter.AddPattern("*.bmp")
 	fileFilter.AddPattern("*.ico")
 	fileDialog.AddFilter(fileFilter)
-	fileDialog.SetCurrentFolder(e.folder.Path)
+	fileDialog.SetCurrentFolder(e.folder.Path())
 
 	if result := fileDialog.Run(); result == gtk.RESPONSE_ACCEPT {
 		// Get selected filename.
