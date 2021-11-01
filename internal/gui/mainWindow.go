@@ -94,7 +94,7 @@ func (m *MainWindow) OpenMainWindow(app *gtk.Application) {
 
 	// Show the main window
 	m.window.ShowAll()
-	m.infoBar.hideInfoBar()
+	m.infoBar.HideInfoBar()
 }
 
 func (m *MainWindow) closeMainWindow() {
@@ -192,7 +192,7 @@ func (m *MainWindow) addButtonClicked() {
 func (m *MainWindow) editButtonClicked() {
 	folder := m.getSelectedRepo()
 	if folder == nil {
-		// TODO : Handle this error, must select folder
+		m.infoBar.ShowInfoWithTimeout("Please select a project to edit.",  5)
 		return
 	}
 	win := NewEditFolderWindow(m)
@@ -202,6 +202,7 @@ func (m *MainWindow) editButtonClicked() {
 func (m *MainWindow) removeButtonClicked() {
 	repo := m.getSelectedRepo()
 	if repo == nil {
+		m.infoBar.ShowInfoWithTimeout("Please select a project to remove.", 5)
 		return
 	}
 
@@ -259,7 +260,7 @@ func (m *MainWindow) refreshRepositoryList() {
 	}
 
 	m.repositoryListBox.ShowAll()
-	m.infoBar.hideInfoBar()
+	m.infoBar.HideInfoBar()
 }
 
 func (m *MainWindow) clearList() {
@@ -429,7 +430,6 @@ func (m *MainWindow) openInExternalApplication(name string, repo *tracker.Tracke
 		m.logger.Error(text)
 		return
 	}
-	m.infoBar.hideInfoBar()
 
 	// Open external application
 	var argument = ""

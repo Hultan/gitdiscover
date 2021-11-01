@@ -134,10 +134,9 @@ func (p *PopupMenu) createFile(path, command string) (string, error) {
 func (p *PopupMenu) runGitCommand(command string, outputType OutputType) {
 	repo := p.mainWindow.getSelectedRepo()
 	if repo == nil {
-		p.mainWindow.infoBar.ShowInfo("Please select a repo...")
+		p.mainWindow.infoBar.ShowInfoWithTimeout("Please select a repo...", 5)
 		return
 	}
-	p.mainWindow.infoBar.hideInfoBar()
 
 	file, err := p.createFile(repo.Path(), command)
 	if err != nil {
