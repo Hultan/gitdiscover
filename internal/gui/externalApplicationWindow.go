@@ -11,13 +11,6 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type ModeType int
-
-const (
-	modeNew  ModeType = 0
-	modeEdit          = 1
-)
-
 type ExternalApplicationDialog struct {
 	window  *gtk.Window
 	builder *framework.GtkBuilder
@@ -30,7 +23,7 @@ type ExternalApplicationDialog struct {
 
 	externalApplication config.ExternalApplication
 	originalName string
-	mode                ModeType
+	mode         externalApplicationModeType
 
 	saveCallback func() bool
 }
@@ -54,7 +47,7 @@ func (e *ExternalApplicationDialog) openDialog(parent *gtk.Window, saveCallback 
 
 	window := e.builder.GetObject("externalApplicationWindow").(*gtk.Window)
 	window.Connect("destroy", window.Destroy)
-	if e.mode == modeNew {
+	if e.mode == externalApplicationModeNew {
 		window.SetTitle("New external application")
 	} else {
 		window.SetTitle(fmt.Sprintf("External Application '%s'", e.externalApplication.Name))
@@ -73,7 +66,7 @@ func (e *ExternalApplicationDialog) openDialog(parent *gtk.Window, saveCallback 
 	e.nameEntry = e.builder.GetObject("nameEntry").(*gtk.Entry)
 	e.commandEntry = e.builder.GetObject("commandEntry").(*gtk.Entry)
 	e.argumentEntry = e.builder.GetObject("argumentEntry").(*gtk.Entry)
-	if e.mode == modeEdit {
+	if e.mode == externalApplicationModeEdit {
 		e.originalName = e.externalApplication.Name
 
 		e.nameEntry.SetText(e.externalApplication.Name)

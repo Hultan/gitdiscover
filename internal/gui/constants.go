@@ -1,15 +1,30 @@
 package gui
 
 const (
-	ApplicationVersion   = "3.7.3"
+	ApplicationVersion   = "3.7.4"
 	ApplicationTitle     = "GitDiscover"
 	ApplicationCopyRight = "©SoftTeam AB, 2021"
 )
 
-type SortByColumn int
+type sortByColumnType int
 
 const (
-	SortByName SortByColumn = iota
+	SortByName sortByColumnType = iota
 	SortByModifiedDate
 	SortByChanges
+)
+
+type externalApplicationModeType int
+
+const (
+	externalApplicationModeNew  externalApplicationModeType = 0
+	externalApplicationModeEdit                             = 1
+)
+
+type gitCommandType uint
+
+const (
+	outputGitStatus gitCommandType = iota
+	outputGitDiff
+	outputGitLog
 )

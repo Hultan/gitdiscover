@@ -94,15 +94,11 @@ func (e *EditFolderWindow) tryLoadIcon(path string) {
 	if err != nil {
 		e.mainWindow.logger.Error(err)
 		var iconPath = ""
+		fw := framework.NewFramework()
 		if e.folder.IsGit() {
-			iconPath, err = getResourcePath("gitFolder.png")
+			iconPath = fw.Resource.GetResourcePath("gitFolder.png")
 		} else {
-			iconPath, err = getResourcePath("folder.png")
-		}
-		if err != nil {
-			e.mainWindow.logger.Error(err)
-			e.image.SetFromPixbuf(nil)
-			return
+			iconPath = fw.Resource.GetResourcePath("folder.png")
 		}
 		pix, err = gdk.PixbufNewFromFileAtSize(iconPath, 16, 16)
 		if err != nil {

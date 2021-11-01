@@ -10,14 +10,6 @@ import (
 	"github.com/hultan/softteam/framework"
 )
 
-type OutputType uint
-
-const (
-	outputGitStatus OutputType = iota
-	outputGitDiff
-	outputGitLog
-)
-
 type OutputWindow struct {
 	builder *framework.GtkBuilder
 	logger *logrus.Logger
@@ -31,7 +23,7 @@ func NewOutputWindow(builder *framework.GtkBuilder, logger *logrus.Logger) *Outp
 	return output
 }
 
-func (o *OutputWindow) openWindow(header, text string, outputType OutputType) {
+func (o *OutputWindow) openWindow(header, text string, gitCommand gitCommandType) {
 	// Create a new softBuilder
 	fw := framework.NewFramework()
 	builder, err := fw.Gtk.CreateBuilder("outputWindow.ui")
@@ -52,7 +44,7 @@ func (o *OutputWindow) openWindow(header, text string, outputType OutputType) {
 	button.Connect("clicked", o.closeWindow)
 
 	label := o.builder.GetObject("labelHeader").(*gtk.Label)
-	header = getHeader(header, outputType)
+	header = getHeader(header, gitCommand)
 	label.SetText(header)
 
 	textView := o.builder.GetObject("textView").(*gtk.TextView)
@@ -67,7 +59,7 @@ func (o *OutputWindow) openWindow(header, text string, outputType OutputType) {
 	text = o.formatTextGeneral(text)
 
 	// Fix specific formatting
-	switch outputType {
+	switch gitCommand {
 	case outputGitStatus:
 		text = o.formatTextGitStatus(text)
 		break
@@ -80,7 +72,7 @@ func (o *OutputWindow) openWindow(header, text string, outputType OutputType) {
 
 	}
 	buffer.InsertMarkup(buffer.GetStartIter(),text)
-	//buffer.SetText(formatTextGitStatus(text))
+	// buffer.SetText(formatTextGitStatus(text))
 	textView.SetEditable(false)
 
 	o.window = window
@@ -92,7 +84,7 @@ func (o *OutputWindow) closeWindow() {
 	o.window = nil
 }
 
-func getHeader(header string, outputType OutputType) string {
+func getHeader(header string, outputType gitCommandType) string {
 	if header=="" {
 		switch outputType {
 		case outputGitStatus:

@@ -15,7 +15,7 @@ type PopupMenu struct {
 	popupMenu  *gtk.Menu
 
 	popupAddFolder            *gtk.MenuItem
-	popupEditFolder			  *gtk.MenuItem
+	popupEditFolder           *gtk.MenuItem
 	popupRemoveFolder         *gtk.MenuItem
 	popupExternalApplications *gtk.MenuItem
 	popupGitStatus            *gtk.MenuItem
@@ -52,33 +52,38 @@ func (p *PopupMenu) Setup() {
 
 func (p *PopupMenu) setupEvents() {
 	_ = p.mainWindow.window.Connect("button-release-event", func(window *gtk.ApplicationWindow, event *gdk.Event) {
+		// If right mouse button is NOT pressed, return
 		buttonEvent := gdk.EventButtonNewFromEvent(event)
-		if buttonEvent.Button() == gdk.BUTTON_SECONDARY {
-			//list := p.popupExternalApplications.GetChildren()
+		if buttonEvent.Button() != gdk.BUTTON_SECONDARY {
+			return
+		}
 
-			menu, err := gtk.MenuNew()
+		// Create a sub menu for external applications
+		menu, err := gtk.MenuNew()
+		if err != nil {
+			p.mainWindow.logger.Error(err)
+			return
+		}
+
+		// Create menu items for external applications
+		for i := 0; i < len(p.mainWindow.config.ExternalApplications); i++ {
+			app := p.mainWindow.config.ExternalApplications[i]
+			item, err := gtk.MenuItemNew()
 			if err != nil {
 				p.mainWindow.logger.Error(err)
-			} else {
-				for i := 0; i < len(p.mainWindow.config.ExternalApplications); i++ {
-					app := p.mainWindow.config.ExternalApplications[i]
-					item, err := gtk.MenuItemNew()
-					if err != nil {
-						p.mainWindow.logger.Error(err)
-						continue
-					}
-					item.SetLabel(app.Name)
-					menu.Add(item)
-					item.Connect("activate", func() {
-						repo := p.mainWindow.getSelectedRepo()
-						p.mainWindow.openInExternalApplication(app.Name, repo)
-					})
-				}
-				p.popupExternalApplications.SetSubmenu(menu)
-				p.popupExternalApplications.ShowAll()
+				continue
 			}
-			p.popupMenu.PopupAtPointer(event)
+			item.SetLabel(app.Name)
+			menu.Add(item)
+			item.Connect("activate", func() {
+				repo := p.mainWindow.getSelectedRepo()
+				p.mainWindow.openInExternalApplication(app.Name, repo)
+			})
 		}
+		p.popupExternalApplications.SetSubmenu(menu)
+		p.popupExternalApplications.ShowAll()
+
+		p.popupMenu.PopupAtPointer(event)
 	})
 
 	p.popupAddFolder.Connect("activate", func() {
@@ -106,38 +111,16 @@ func (p *PopupMenu) setupEvents() {
 	})
 }
 
-func (p *PopupMenu) createFile(path, command string) (string, error) {
-	text := "#!/bin/sh\n"
-	text += "cd " + path + "\n"
-	text += command
-
-	content := []byte(text)
-	tmpfile, err := ioutil.TempFile("", "gitdiscover.*.sh")
-	if err != nil {
-		p.mainWindow.logger.Error(err)
-		return "", err
-	}
-
-	// clean up
-	if _, err := tmpfile.Write(content); err != nil {
-		p.mainWindow.logger.Error(err)
-		return "", err
-	}
-	if err := tmpfile.Close(); err != nil {
-		p.mainWindow.logger.Error(err)
-		return "", err
-	}
-
-	return tmpfile.Name(), nil
-}
-
-func (p *PopupMenu) runGitCommand(command string, outputType OutputType) {
+// runGitCommand : Run a GIT command
+func (p *PopupMenu) runGitCommand(command string, outputType gitCommandType) {
+	// Get the currently selected repo
 	repo := p.mainWindow.getSelectedRepo()
 	if repo == nil {
 		p.mainWindow.infoBar.ShowInfoWithTimeout("Please select a repo...", 5)
 		return
 	}
 
+	// Create a temp bash file, with the command
 	file, err := p.createFile(repo.Path(), command)
 	if err != nil {
 		p.mainWindow.logger.Error(err)
@@ -145,13 +128,45 @@ func (p *PopupMenu) runGitCommand(command string, outputType OutputType) {
 		return
 	}
 
+	// Execute the bash file
 	result := p.mainWindow.executeCommand("/bin/sh", file)
 	output := NewOutputWindow(p.mainWindow.builder, p.mainWindow.logger)
 	output.openWindow("", result, outputType)
 
+	// Clean up
 	err = os.Remove(file)
 	if err != nil {
 		p.mainWindow.logger.Error(err)
 		p.mainWindow.infoBar.ShowError(err.Error())
 	}
+}
+
+// createFile : Create a temp bash file
+func (p *PopupMenu) createFile(path, command string) (string, error) {
+	// Create the text for the bash file
+	text := "#!/bin/sh\n"
+	text += "cd " + path + "\n"
+	text += command
+
+	// Create a temp file
+	content := []byte(text)
+	tmpfile, err := ioutil.TempFile("", "gitdiscover.*.sh")
+	if err != nil {
+		p.mainWindow.logger.Error(err)
+		return "", err
+	}
+
+	// Write to the file
+	if _, err := tmpfile.Write(content); err != nil {
+		p.mainWindow.logger.Error(err)
+		return "", err
+	}
+
+	// clean up
+	if err := tmpfile.Close(); err != nil {
+		p.mainWindow.logger.Error(err)
+		return "", err
+	}
+
+	return tmpfile.Name(), nil
 }

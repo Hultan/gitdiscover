@@ -90,7 +90,7 @@ func (e *ExternalApplicationsWindow) fillExternalApplicationsList() {
 
 func (e *ExternalApplicationsWindow) addExternalApplication() {
 	dialog := NewExternalApplicationDialog(e.logger, e.config)
-	dialog.mode = modeNew
+	dialog.mode = externalApplicationModeNew
 	dialog.openDialog(e.window, func() bool {
 		app := config.ExternalApplication{
 			Name:     dialog.externalApplication.Name,
@@ -129,7 +129,7 @@ func (e *ExternalApplicationsWindow) editExternalApplication() {
 func (e *ExternalApplicationsWindow) editExternalApplicationByIndex(index int) {
 	dialog := NewExternalApplicationDialog(e.logger, e.config)
 	dialog.externalApplication = e.config.ExternalApplications[index]
-	dialog.mode = modeEdit
+	dialog.mode = externalApplicationModeEdit
 	dialog.openDialog(e.window, func() bool {
 		e.config.ExternalApplications[index].Name = dialog.externalApplication.Name
 		e.config.ExternalApplications[index].Command = dialog.externalApplication.Command

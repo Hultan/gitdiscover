@@ -31,8 +31,8 @@ type MainWindow struct {
 	infoBar           *InfoBar
 	toolBar           *gtk.Toolbar
 
-	sortBy             SortByColumn
-	sortByName         *gtk.RadioMenuItem
+	sortBy     sortByColumnType
+	sortByName *gtk.RadioMenuItem
 	sortByModifiedDate *gtk.RadioMenuItem
 	sortByChanges      *gtk.RadioMenuItem
 }
@@ -310,17 +310,14 @@ func (m *MainWindow) createListItem(index int, dateFormat string, repo *tracker.
 	box.SetName(fmt.Sprintf("box_%v", index))
 
 	// Icon
+	fw := framework.NewFramework()
 	iconPath := repo.ImagePath()
-	if !fileExists(iconPath) {
+	if !fw.IO.FileExists(iconPath) {
 		// General icon for project that don't have one
 		if repo.IsGit() {
-			iconPath, err = getResourcePath("gitFolder.png")
+			iconPath = fw.Resource.GetResourcePath("gitFolder.png")
 		} else {
-			iconPath, err = getResourcePath("folder.png")
-		}
-		if err != nil {
-			m.logger.Panic(err)
-			panic(err)
+			iconPath = fw.Resource.GetResourcePath("folder.png")
 		}
 	}
 	pix, err := gdk.PixbufNewFromFileAtSize(iconPath, 16, 16)
