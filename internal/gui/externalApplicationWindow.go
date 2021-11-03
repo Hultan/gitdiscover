@@ -22,8 +22,8 @@ type ExternalApplicationDialog struct {
 	argumentEntry *gtk.Entry
 
 	externalApplication config.ExternalApplication
-	originalName string
-	mode         externalApplicationModeType
+	originalName        string
+	mode                externalApplicationModeType
 
 	saveCallback func() bool
 }

@@ -31,8 +31,8 @@ type MainWindow struct {
 	infoBar           *InfoBar
 	toolBar           *gtk.Toolbar
 
-	sortBy     sortByColumnType
-	sortByName *gtk.RadioMenuItem
+	sortBy             sortByColumnType
+	sortByName         *gtk.RadioMenuItem
 	sortByModifiedDate *gtk.RadioMenuItem
 	sortByChanges      *gtk.RadioMenuItem
 }
@@ -115,15 +115,15 @@ func (m *MainWindow) setupToolBar() {
 
 	// Add button
 	button = m.builder.GetObject("toolbarAddButton").(*gtk.ToolButton)
-	_ = button.Connect("clicked", m.addButtonClicked)
+	_ = button.Connect("clicked", m.addRepositoryButtonClicked)
 
 	// Edit button
 	button = m.builder.GetObject("toolbarEditButton").(*gtk.ToolButton)
-	_ = button.Connect("clicked", m.editButtonClicked)
+	_ = button.Connect("clicked", m.editRepositoryButtonClicked)
 
 	// Remove button
 	button = m.builder.GetObject("toolbarRemoveButton").(*gtk.ToolButton)
-	_ = button.Connect("clicked", m.removeButtonClicked)
+	_ = button.Connect("clicked", m.removeRepositoryButtonClicked)
 
 	// Refresh button
 	button = m.builder.GetObject("toolbarRefreshButton").(*gtk.ToolButton)
@@ -161,7 +161,7 @@ func (m *MainWindow) setupMenuBar() {
 	_ = button.Connect("activate", m.openAboutDialog)
 }
 
-func (m *MainWindow) addButtonClicked() {
+func (m *MainWindow) addRepositoryButtonClicked() {
 	dialog, err := gtk.FileChooserDialogNewWith2Buttons("Select path...",
 		nil,
 		gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER,
@@ -181,25 +181,24 @@ func (m *MainWindow) addButtonClicked() {
 	}
 
 	imagePath := filepath.Join(dialog.GetFilename(), "assets/application.png")
-	repo := gitConfig.Repository{Path: dialog.GetFilename(), ImagePath: imagePath}
-	m.config.Repositories = append(m.config.Repositories, repo)
+	m.config.AddRepository(dialog.GetFilename(), imagePath)
 	m.config.Save()
 	fmt.Println("Added path : ", dialog.GetFilename())
 	dialog.Destroy()
 	m.refreshRepositoryList()
 }
 
-func (m *MainWindow) editButtonClicked() {
+func (m *MainWindow) editRepositoryButtonClicked() {
 	folder := m.getSelectedRepo()
 	if folder == nil {
-		m.infoBar.ShowInfoWithTimeout("Please select a project to edit.",  5)
+		m.infoBar.ShowInfoWithTimeout("Please select a project to edit.", 5)
 		return
 	}
 	win := NewEditFolderWindow(m)
 	win.openWindow(folder)
 }
 
-func (m *MainWindow) removeButtonClicked() {
+func (m *MainWindow) removeRepositoryButtonClicked() {
 	repo := m.getSelectedRepo()
 	if repo == nil {
 		m.infoBar.ShowInfoWithTimeout("Please select a project to remove.", 5)

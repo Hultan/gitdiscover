@@ -22,15 +22,6 @@ func TestConfig_Load(t *testing.T) {
 	err := config.Load()
 	assert.Nil(t, err)
 
-	assert.Equal(t, "/home/per/code/gotk3-more-examples",
-		config.GetRepositoryByPath("/home/per/code/gotk3-more-examples").Path)
-
-	assert.Equal(t, "/home/per/code/gotk3-more-examples/assets/application.png",
-		config.GetRepositoryByPath("/home/per/code/gotk3-more-examples").ImagePath)
-
-	assert.Equal(t, "Nemo", config.GetExternalApplicationByName("Nemo").Name)
-	assert.Equal(t, "nemo", config.GetExternalApplicationByName("Nemo").Command)
-	assert.Equal(t, "%PATH%", config.GetExternalApplicationByName("Nemo").Argument)
 	assert.Equal(t, "2006-01-02, kl. 15:04", config.DateFormat)
 	assert.Equal(t, 40, config.PathColumnWidth)
 }

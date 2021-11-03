@@ -18,7 +18,6 @@ type ExternalApplicationsWindow struct {
 	refresh func()
 }
 
-
 func NewExternalApplicationsWindow(logger *logrus.Logger, config *config.Config) *ExternalApplicationsWindow {
 	window := new(ExternalApplicationsWindow)
 	window.config = config
@@ -107,7 +106,7 @@ func (e *ExternalApplicationsWindow) addExternalApplication() {
 
 func (e *ExternalApplicationsWindow) removeExternalApplication() {
 	app, index := e.getSelectedApplication()
-	if app==nil {
+	if app == nil {
 		// TODO Please select an application
 		return
 	}
@@ -147,7 +146,7 @@ func (e *ExternalApplicationsWindow) clearListBox() {
 		return
 	}
 	var i uint = 0
-	for ; i < children.Length(); {
+	for i < children.Length() {
 		widget, _ := children.NthData(i).(*gtk.Widget)
 		e.listBox.Remove(widget)
 		i++

@@ -8,6 +8,7 @@ import (
 	"path"
 )
 
+// Config : The main config type
 type Config struct {
 	Repositories         []Repository          `json:"repositories"`
 	ExternalApplications []ExternalApplication `json:"external-applications"`
@@ -15,17 +16,20 @@ type Config struct {
 	PathColumnWidth      int                   `json:"path-column-width"`
 }
 
+// Repository : A repository in the config
 type Repository struct {
 	Path      string `json:"path"`
 	ImagePath string `json:"image-path"`
 }
 
+// ExternalApplication : An external application in the config
 type ExternalApplication struct {
 	Name     string `json:"name"`
 	Command  string `json:"command"`
 	Argument string `json:"argument"`
 }
 
+// NewConfig : Create a new config readergit diff
 func NewConfig() *Config {
 	return new(Config)
 }
@@ -94,14 +98,10 @@ func (config *Config) GetConfigPath() string {
 	return path.Join(home, defaultConfigPath)
 }
 
-// Get current users home directory
-func (config *Config) getHomeDirectory() string {
-	u, err := user.Current()
-	if err != nil {
-		errorMessage := fmt.Sprintf("Failed to get user home directory : %s", err)
-		panic(errorMessage)
-	}
-	return u.HomeDir
+// AddRepository : Adds a new repository to the config
+func (config *Config) AddRepository(path, imagePath string) {
+	repo := Repository{Path: path, ImagePath: imagePath}
+	config.Repositories = append(config.Repositories, repo)
 }
 
 func (config *Config) GetExternalApplicationByName(name string) *ExternalApplication {
@@ -113,4 +113,18 @@ func (config *Config) GetExternalApplicationByName(name string) *ExternalApplica
 	}
 
 	return nil
+}
+
+//
+// Private functions
+//
+
+// Get current users home directory
+func (config *Config) getHomeDirectory() string {
+	u, err := user.Current()
+	if err != nil {
+		errorMessage := fmt.Sprintf("Failed to get user home directory : %s", err)
+		panic(errorMessage)
+	}
+	return u.HomeDir
 }
