@@ -87,15 +87,15 @@ func (p *PopupMenu) setupEvents() {
 	})
 
 	p.popupAddFolder.Connect("activate", func() {
-		p.mainWindow.addButtonClicked()
+		p.mainWindow.addRepositoryButtonClicked()
 	})
 
 	p.popupEditFolder.Connect("activate", func() {
-		p.mainWindow.editButtonClicked()
+		p.mainWindow.editRepositoryButtonClicked()
 	})
 
 	p.popupRemoveFolder.Connect("activate", func() {
-		p.mainWindow.removeButtonClicked()
+		p.mainWindow.removeRepositoryButtonClicked()
 	})
 
 	p.popupGitStatus.Connect("activate", func() {
