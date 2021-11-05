@@ -21,6 +21,7 @@ type PopupMenu struct {
 	popupGitStatus            *gtk.MenuItem
 	popupGitDiff              *gtk.MenuItem
 	popupGitLog               *gtk.MenuItem
+	popupGit                  *gtk.MenuItem
 }
 
 func NewPopupMenu(window *MainWindow) *PopupMenu {
@@ -43,6 +44,7 @@ func (p *PopupMenu) Setup() {
 	p.popupEditFolder = builder.GetObject("popupEditFolder").(*gtk.MenuItem)
 	p.popupRemoveFolder = builder.GetObject("popupRemoveFolder").(*gtk.MenuItem)
 	p.popupExternalApplications = builder.GetObject("popupExternalApplications").(*gtk.MenuItem)
+	p.popupGit = builder.GetObject("popupGit").(*gtk.MenuItem)
 	p.popupGitStatus = builder.GetObject("popupGitStatus").(*gtk.MenuItem)
 	p.popupGitDiff = builder.GetObject("popupGitDiff").(*gtk.MenuItem)
 	p.popupGitLog = builder.GetObject("popupGitLog").(*gtk.MenuItem)
@@ -57,6 +59,16 @@ func (p *PopupMenu) setupEvents() {
 		if buttonEvent.Button() != gdk.BUTTON_SECONDARY {
 			return
 		}
+
+		// Get the currently selected repo
+		repo := p.mainWindow.getSelectedRepo()
+		if repo == nil {
+			p.mainWindow.infoBar.ShowInfoWithTimeout("Please select a repo...", 5)
+			return
+		}
+
+		// Disable the git menu for non-git folders
+		p.popupGit.SetSensitive(repo.IsGit())
 
 		// Create a sub menu for external applications
 		menu, err := gtk.MenuNew()
