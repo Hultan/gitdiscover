@@ -1,17 +1,17 @@
 package gui
 
 const (
-	ApplicationVersion   = "3.7.5"
-	ApplicationTitle     = "GitDiscover"
-	ApplicationCopyRight = "©SoftTeam AB, 2021"
+	applicationVersion   = "3.7.5"
+	applicationTitle     = "GitDiscover"
+	applicationCopyRight = "©SoftTeam AB, 2021"
 )
 
 type sortByColumnType int
 
 const (
-	SortByName sortByColumnType = iota
-	SortByModifiedDate
-	SortByChanges
+	sortByName sortByColumnType = iota
+	sortByModifiedDate
+	sortByChanges
 )
 
 type externalApplicationModeType int

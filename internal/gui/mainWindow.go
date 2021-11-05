@@ -63,7 +63,7 @@ func (m *MainWindow) OpenMainWindow(app *gtk.Application) {
 
 	// Set up main window
 	m.window.SetApplication(app)
-	m.window.SetTitle(fmt.Sprintf("%s - %s", ApplicationTitle, ApplicationVersion))
+	m.window.SetTitle(fmt.Sprintf("%s - %s", applicationTitle, applicationVersion))
 	_ = m.window.Connect("destroy", m.closeMainWindow)
 
 	// Toolbar
@@ -75,7 +75,7 @@ func (m *MainWindow) OpenMainWindow(app *gtk.Application) {
 
 	// Status bar
 	lblInformation := m.builder.GetObject("lblApplicationInfo").(*gtk.Label)
-	lblInformation.SetText(fmt.Sprintf("%s %s - %s", ApplicationTitle, ApplicationVersion, ApplicationCopyRight))
+	lblInformation.SetText(fmt.Sprintf("%s %s - %s", applicationTitle, applicationVersion, applicationCopyRight))
 
 	// Info bar
 	infoBar := m.builder.GetObject("infoBar").(*gtk.InfoBar)
@@ -225,11 +225,11 @@ func (m *MainWindow) refreshRepositoryList() {
 	m.tracker = tracker.NewTracker(m.config)
 
 	switch m.sortBy {
-	case SortByName:
+	case sortByName:
 		sort.Sort(tracker.ByName{TrackedFolders: m.tracker.Folders})
-	case SortByModifiedDate:
+	case sortByModifiedDate:
 		sort.Sort(tracker.ByModifiedDate{TrackedFolders: m.tracker.Folders})
-	case SortByChanges:
+	case sortByChanges:
 		sort.Sort(tracker.ByChanges{TrackedFolders: m.tracker.Folders})
 	}
 
@@ -529,15 +529,15 @@ func (m *MainWindow) toggleSortBy(radio *gtk.RadioMenuItem) {
 	name := radio.GetLabel()
 	switch name {
 	case "Name":
-		m.sortBy = SortByName
+		m.sortBy = sortByName
 		// m.sortByModifiedDate.SetActive(false)
 		// m.sortByChanges.SetActive(false)
 	case "Modified date":
-		m.sortBy = SortByModifiedDate
+		m.sortBy = sortByModifiedDate
 		// m.sortByName.SetActive(false)
 		// m.sortByChanges.SetActive(false)
 	case "Changes":
-		m.sortBy = SortByChanges
+		m.sortBy = sortByChanges
 		// m.sortByName.SetActive(false)
 		// m.sortByModifiedDate.SetActive(false)
 	}

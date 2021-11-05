@@ -47,7 +47,7 @@ func startLogging() *logrus.Logger {
 	l.Level = logrus.TraceLevel
 	l.Out = os.Stdout
 
-	file, err := os.OpenFile(ApplicationLogPath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
+	file, err := os.OpenFile(applicationLogPath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
 	if err == nil {
 		l.Out = file
 	} else {
@@ -77,13 +77,13 @@ func loadConfig() *gitConfig.Config {
 
 func showGUI(logger *logrus.Logger, config *gitConfig.Config) {
 	// Create a new application
-	application, err := gtk.ApplicationNew(ApplicationId, ApplicationFlags)
+	application, err := gtk.ApplicationNew(applicationId, applicationFlags)
 	if err != nil {
 		exitProgram(exitUnknown, err)
 	}
 
 	mainForm := gui.NewMainWindow(logger, config)
-	mainForm.ApplicationLogPath = ApplicationLogPath
+	mainForm.ApplicationLogPath = applicationLogPath
 	// Hook up the activate event handler
 	_ = application.Connect("activate", mainForm.OpenMainWindow)
 

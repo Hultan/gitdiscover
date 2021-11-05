@@ -13,7 +13,7 @@ type aboutDialog struct {
 	logger *logrus.Logger
 }
 
-func NewAboutDialog(logger *logrus.Logger, parent *gtk.ApplicationWindow) *aboutDialog{
+func NewAboutDialog(logger *logrus.Logger, parent *gtk.ApplicationWindow) *aboutDialog {
 	about := new(aboutDialog)
 	about.parent = parent
 	about.logger = logger
@@ -32,9 +32,9 @@ func (m *aboutDialog) openAboutDialog() {
 
 		about.SetDestroyWithParent(true)
 		about.SetTransientFor(m.parent)
-		about.SetProgramName(ApplicationTitle)
-		about.SetVersion(ApplicationVersion)
-		about.SetCopyright(ApplicationCopyRight)
+		about.SetProgramName(applicationTitle)
+		about.SetVersion(applicationVersion)
+		about.SetCopyright(applicationCopyRight)
 		about.SetComments("Discover your GIT repositories...")
 		about.SetModal(true)
 		about.SetPosition(gtk.WIN_POS_CENTER)
@@ -50,4 +50,3 @@ func (m *aboutDialog) openAboutDialog() {
 
 	m.dialog.ShowAll()
 }
-
