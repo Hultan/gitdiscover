@@ -222,7 +222,11 @@ func (m *MainWindow) refreshRepositoryList() {
 	// Clear list
 	m.clearList()
 
-	m.tracker = tracker.NewTracker(m.config)
+	if m.tracker == nil {
+		m.tracker = tracker.NewTracker(m.config)
+	} else {
+		m.tracker.Refresh()
+	}
 
 	switch m.sortBy {
 	case sortByName:

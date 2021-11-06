@@ -14,6 +14,7 @@ import (
 // TrackedFolders is a slice of tracked folders.
 type TrackedFolders []*TrackedFolder
 
+// TrackedFolder represents a tracked git repositry or a standard folder.
 type TrackedFolder struct {
 	name         string
 	path         string
@@ -26,16 +27,19 @@ type TrackedFolder struct {
 	hasRemote    bool
 }
 
-func NewFolder(folder string) *TrackedFolder {
+func newFolder(folder string) *TrackedFolder {
 	f := TrackedFolder{path: strings.Trim(folder, " ")}
-	f.Refresh()
+	f.refresh()
 	return &f
 }
 
-func (f TrackedFolders) Len() int      { return len(f) }
+// Len makes sure that TrackedFolders implements the Interface interface
+func (f TrackedFolders) Len() int { return len(f) }
+
+// Swap makes sure that TrackedFolders implements the Interface interface
 func (f TrackedFolders) Swap(i, j int) { f[i], f[j] = f[j], f[i] }
 
-func (f *TrackedFolder) Refresh() {
+func (f *TrackedFolder) refresh() {
 	f.name = path.Base(f.path)
 	f.isGit = f.isGitFolder(path.Join(f.path, ".git"))
 	f.modifiedDate = f.getModifiedDate(f.path)
@@ -47,35 +51,43 @@ func (f *TrackedFolder) Refresh() {
 	}
 }
 
+// Name returns the name of the repository.
 func (f *TrackedFolder) Name() string {
 	return f.name
 }
 
+// Path returns the repository path.
 func (f *TrackedFolder) Path() string {
 	return f.path
 }
 
+// SetPath lets the user change the path to the repository.
 func (f *TrackedFolder) SetPath(newPath string) {
 	f.path = newPath
-	f.Refresh()
+	f.refresh()
 }
 
+// ImagePath returns the path to the TrackedFolders image.
 func (f *TrackedFolder) ImagePath() string {
 	return f.imagePath
 }
 
-func (f *TrackedFolder) SetImagePath(newPath string) {
+// setImagePath lets the user change the path to the TrackedFolders image.
+func (f *TrackedFolder) setImagePath(newPath string) {
 	f.imagePath = newPath
 }
 
+// GitStatus returns the git status
 func (f *TrackedFolder) GitStatus() string {
 	return f.gitStatus
 }
 
+// GoStatus returns the go status
 func (f *TrackedFolder) GoStatus() string {
 	return f.goStatus
 }
 
+// HasRemote returns true if the repository has a Git remote repository.
 func (f *TrackedFolder) HasRemote() string {
 	if !f.IsGit() {
 		return ""
@@ -87,14 +99,17 @@ func (f *TrackedFolder) HasRemote() string {
 	return "no  "
 }
 
+// IsGit returns true if the folder points to a Git repository (has a .git folder).
 func (f *TrackedFolder) IsGit() bool {
 	return f.isGit
 }
 
+// ModifiedDate returns the modified date of the folder.
 func (f *TrackedFolder) ModifiedDate() time.Time {
 	return f.modifiedDate
 }
 
+// Changes returns the number of changes to the folder.
 func (f *TrackedFolder) Changes() int {
 	return f.changes
 }
