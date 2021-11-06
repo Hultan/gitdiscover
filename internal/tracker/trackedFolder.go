@@ -9,6 +9,7 @@ import (
 	"time"
 )
 
+// TrackedFolders is a slice of tracked folders.
 type TrackedFolders []*TrackedFolder
 
 type TrackedFolder struct {
@@ -18,6 +19,7 @@ type TrackedFolder struct {
 	modifiedDate time.Time
 	imagePath    string
 	gitStatus    string
+	goStatus     string
 	changes      int
 }
 
@@ -36,6 +38,7 @@ func (f *TrackedFolder) Refresh() {
 	f.modifiedDate = f.getModifiedDate(f.path)
 	if f.isGit {
 		f.gitStatus = f.getGitStatus(f.path)
+		f.goStatus = f.getGoStatus(f.path)
 		f.changes = f.getNoOfChanges(f.gitStatus)
 	}
 }
@@ -65,6 +68,9 @@ func (f *TrackedFolder) GitStatus() string {
 	return f.gitStatus
 }
 
+func (f *TrackedFolder) GoStatus() string {
+	return f.goStatus
+}
 func (f *TrackedFolder) IsGit() bool {
 	return f.isGit
 }
@@ -93,7 +99,22 @@ func (f *TrackedFolder) getModifiedDate(path string) time.Time {
 
 // Get the git status
 func (f *TrackedFolder) getGitStatus(path string) string {
-	cmd := exec.Command("/home/per/bin/gitprompt-go")
+	const gitPromptCommand = "/home/per/bin/gitprompt-go"
+	const gitPromptCommandFormat = "$(BRANCH)$(AHEAD)$(BEHIND)$(SEPARATOR)$(UNTRACKED)$(MODIFIED)$(DELETED)$(UNMERGED)$(STAGED)"
+	cmd := exec.Command(gitPromptCommand, "-f", gitPromptCommandFormat)
+	cmd.Dir = path
+	out, err := cmd.Output()
+	if err != nil {
+		return ""
+	}
+	return strings.Replace(string(out), "\n", "", -1)
+}
+
+// Get the go status
+func (f *TrackedFolder) getGoStatus(path string) string {
+	const gitPromptCommand = "/home/per/bin/gitprompt-go"
+	const gitPromptCommandFormat = "$(GOVERSION)"
+	cmd := exec.Command(gitPromptCommand, "-f", gitPromptCommandFormat)
 	cmd.Dir = path
 	out, err := cmd.Output()
 	if err != nil {
@@ -110,7 +131,7 @@ func (f *TrackedFolder) getNoOfChanges(status string) int {
 	for _, field := range fields {
 		c, err := strconv.Atoi(field)
 		if err != nil {
-			c=0
+			c = 0
 		}
 		changes += c
 	}

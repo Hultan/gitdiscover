@@ -343,6 +343,17 @@ func (m *MainWindow) createListItem(index int, dateFormat string, repo *tracker.
 	label.SetXAlign(0.0)
 	box.PackStart(label, false, false, 10)
 
+	// GoStatus
+	label, err = gtk.LabelNew("")
+	if err != nil {
+		m.logger.Panic(err)
+		panic(err)
+	}
+	label.SetMarkup(`<span font="Sans Regular 10" foreground="#44DD44">` + repo.GoStatus() + `</span>`)
+	label.SetName("lblStatus")
+	label.SetHAlign(gtk.ALIGN_START)
+	box.PackEnd(label, false, false, 10)
+
 	// GitStatus
 	label, err = gtk.LabelNew("")
 	if err != nil {

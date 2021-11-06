@@ -5,7 +5,7 @@ import (
 )
 
 type Tracker struct {
-	Config *discoverConfig.Config
+	Config  *discoverConfig.Config
 	Folders TrackedFolders
 }
 

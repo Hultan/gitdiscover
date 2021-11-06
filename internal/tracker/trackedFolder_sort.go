@@ -35,4 +35,3 @@ func (b ByChanges) Less(i, j int) bool {
 	}
 	return b.TrackedFolders[i].changes > b.TrackedFolders[j].changes
 }
-
