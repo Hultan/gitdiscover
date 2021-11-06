@@ -1,7 +1,7 @@
 package gui
 
 const (
-	applicationVersion   = "3.7.6"
+	applicationVersion   = "3.7.7"
 	applicationTitle     = "GitDiscover"
 	applicationCopyRight = "©SoftTeam AB, 2021"
 )

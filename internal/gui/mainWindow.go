@@ -325,6 +325,7 @@ func (m *MainWindow) createListItem(index int, dateFormat string, repo *tracker.
 		panic(err)
 	}
 	image, err := gtk.ImageNewFromPixbuf(pix)
+	image.SetTooltipText("Application.png from assets folder in repository")
 	if err != nil {
 		m.logger.Panic(err)
 		panic(err)
@@ -339,9 +340,22 @@ func (m *MainWindow) createListItem(index int, dateFormat string, repo *tracker.
 	}
 	label.SetMarkup(`<span font="Sans Regular 10" foreground="#44DD44">` + repo.ModifiedDate().Format(dateFormat) + `</span>`)
 	label.SetName("lblDate")
+	label.SetTooltipText("Modifed date of repository folder")
 	sgDate.AddWidget(label)
 	label.SetXAlign(0.0)
 	box.PackStart(label, false, false, 10)
+
+	// HasRemote
+	label, err = gtk.LabelNew("")
+	if err != nil {
+		m.logger.Panic(err)
+		panic(err)
+	}
+	label.SetMarkup(`<span font="Sans Regular 10" foreground="#44DD44">` + repo.HasRemote() + `</span>`)
+	label.SetName("lblHasRemote")
+	label.SetTooltipText("Has a Git remote repository")
+	label.SetHAlign(gtk.ALIGN_START)
+	box.PackEnd(label, false, false, 10)
 
 	// GoStatus
 	label, err = gtk.LabelNew("")
@@ -350,7 +364,8 @@ func (m *MainWindow) createListItem(index int, dateFormat string, repo *tracker.
 		panic(err)
 	}
 	label.SetMarkup(`<span font="Sans Regular 10" foreground="#44DD44">` + repo.GoStatus() + `</span>`)
-	label.SetName("lblStatus")
+	label.SetName("lblGoStatus")
+	label.SetTooltipText("Go version from the go.mod file")
 	label.SetHAlign(gtk.ALIGN_START)
 	box.PackEnd(label, false, false, 10)
 
@@ -362,6 +377,7 @@ func (m *MainWindow) createListItem(index int, dateFormat string, repo *tracker.
 	}
 	label.SetMarkup(`<span font="Sans Regular 10" foreground="#44DD44">` + repo.GitStatus() + `</span>`)
 	label.SetName("lblStatus")
+	label.SetTooltipText("Result from the Git status command")
 	label.SetHAlign(gtk.ALIGN_START)
 	box.PackEnd(label, false, false, 10)
 
@@ -372,6 +388,7 @@ func (m *MainWindow) createListItem(index int, dateFormat string, repo *tracker.
 		panic(err)
 	}
 	label.SetName("lblPath")
+	label.SetTooltipText("Repository path")
 	label.SetHAlign(gtk.ALIGN_START)
 	box.PackEnd(label, true, true, 10)
 

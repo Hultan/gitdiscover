@@ -1,9 +1,11 @@
 package tracker
 
 import (
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"path"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -21,6 +23,7 @@ type TrackedFolder struct {
 	gitStatus    string
 	goStatus     string
 	changes      int
+	hasRemote    bool
 }
 
 func NewFolder(folder string) *TrackedFolder {
@@ -37,6 +40,7 @@ func (f *TrackedFolder) Refresh() {
 	f.isGit = f.isGitFolder(path.Join(f.path, ".git"))
 	f.modifiedDate = f.getModifiedDate(f.path)
 	if f.isGit {
+		f.hasRemote = f.getHasRemote(f.path)
 		f.gitStatus = f.getGitStatus(f.path)
 		f.goStatus = f.getGoStatus(f.path)
 		f.changes = f.getNoOfChanges(f.gitStatus)
@@ -71,6 +75,18 @@ func (f *TrackedFolder) GitStatus() string {
 func (f *TrackedFolder) GoStatus() string {
 	return f.goStatus
 }
+
+func (f *TrackedFolder) HasRemote() string {
+	if !f.IsGit() {
+		return ""
+	}
+	if f.hasRemote {
+		return "yes"
+	}
+
+	return "no  "
+}
+
 func (f *TrackedFolder) IsGit() bool {
 	return f.isGit
 }
@@ -136,4 +152,19 @@ func (f *TrackedFolder) getNoOfChanges(status string) int {
 		changes += c
 	}
 	return changes
+}
+
+func (f *TrackedFolder) getHasRemote(repoPath string) bool {
+	configPath := path.Join(repoPath, ".git", "config")
+	buf, err := ioutil.ReadFile(configPath)
+	if err != nil {
+		return false
+	}
+	expr := `\[remote`
+	r := regexp.MustCompile(expr)
+	result := r.FindString(string(buf))
+	if result == "" {
+		return false
+	}
+	return true
 }
