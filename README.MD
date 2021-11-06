@@ -4,4 +4,4 @@ Shows git status for several directories at once. Can start external application
 
 Requires ```gitprompt-go```
 
-config.json should be placed in ```~/config/gitdiscovery```
+config.json should be placed in ```~/.config/softteam/gitdiscover/config.json```
