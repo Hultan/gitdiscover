@@ -37,6 +37,9 @@ type MainWindow struct {
 	sortByChanges      *gtk.RadioMenuItem
 }
 
+// Column :            Path      Date      GitStatus GoStatus  Yes       No
+var colors = []string{"FFFFFF", "8DB38B", "D2AB99", "ADD3AB", "C290AA", "A26690"}
+
 // NewMainWindow : Creates a new MainWindow object
 func NewMainWindow(logger *logrus.Logger, config *gitConfig.Config) *MainWindow {
 	mainWindow := new(MainWindow)
@@ -342,7 +345,7 @@ func (m *MainWindow) createListItem(index int, dateFormat string, repo *tracker.
 		m.logger.Panic(err)
 		panic(err)
 	}
-	label.SetMarkup(`<span font="Sans Regular 10" foreground="#44DD44">` + repo.ModifiedDate().Format(dateFormat) + `</span>`)
+	label.SetMarkup(m.getMarkup(repo.ModifiedDate().Format(dateFormat), colors[1]))
 	label.SetName("lblDate")
 	label.SetTooltipText("Modifed date of repository folder")
 	sgDate.AddWidget(label)
@@ -355,7 +358,14 @@ func (m *MainWindow) createListItem(index int, dateFormat string, repo *tracker.
 		m.logger.Panic(err)
 		panic(err)
 	}
-	label.SetMarkup(`<span font="Sans Regular 10" foreground="#44DD44">` + repo.HasRemote() + `</span>`)
+	if strings.Trim(repo.HasRemote(), " ") == "yes" {
+		label.SetMarkup(m.getMarkup(repo.HasRemote(), colors[4]))
+		// label.SetMarkup(`<span font="Sans Regular 10" foreground="#44DD44">` + repo.HasRemote() + `</span>`)
+	} else {
+		label.SetMarkup(m.getMarkup(repo.HasRemote(), colors[5]))
+		// label.SetMarkup(`<span font="Sans Regular 10" foreground="#DD4444">` + repo.HasRemote() + `</span>`)
+	}
+
 	label.SetName("lblHasRemote")
 	label.SetTooltipText("Has a Git remote repository")
 	label.SetHAlign(gtk.ALIGN_START)
@@ -367,7 +377,8 @@ func (m *MainWindow) createListItem(index int, dateFormat string, repo *tracker.
 		m.logger.Panic(err)
 		panic(err)
 	}
-	label.SetMarkup(`<span font="Sans Regular 10" foreground="#44DD44">` + repo.GoStatus() + `</span>`)
+	// label.SetMarkup(`<span font="Sans Regular 10" foreground="#6666DD">` + repo.GoStatus() + `</span>`)
+	label.SetMarkup(m.getMarkup(repo.GoStatus(), colors[3]))
 	label.SetName("lblGoStatus")
 	label.SetTooltipText("Go version from the go.mod file")
 	label.SetHAlign(gtk.ALIGN_START)
@@ -379,7 +390,8 @@ func (m *MainWindow) createListItem(index int, dateFormat string, repo *tracker.
 		m.logger.Panic(err)
 		panic(err)
 	}
-	label.SetMarkup(`<span font="Sans Regular 10" foreground="#44DD44">` + repo.GitStatus() + `</span>`)
+	// label.SetMarkup(`<span font="Sans Regular 10" foreground="#22BB88">` + repo.GitStatus() + `</span>`)
+	label.SetMarkup(m.getMarkup(repo.GitStatus(), colors[2]))
 	label.SetName("lblStatus")
 	label.SetTooltipText("Result from the Git status command")
 	label.SetHAlign(gtk.ALIGN_START)
@@ -391,12 +403,20 @@ func (m *MainWindow) createListItem(index int, dateFormat string, repo *tracker.
 		m.logger.Panic(err)
 		panic(err)
 	}
+	label.SetMarkup(m.getMarkup(repo.Path(), colors[0]))
 	label.SetName("lblPath")
 	label.SetTooltipText("Repository path")
 	label.SetHAlign(gtk.ALIGN_START)
 	box.PackEnd(label, true, true, 10)
 
 	return box
+}
+
+func (m *MainWindow) getMarkup(text, color string) string {
+	markup := fmt.Sprintf(`<span font="Sans Regular 10" foreground="#%s">`, color)
+	markup += text
+	markup += `</span>`
+	return markup
 }
 
 func (m *MainWindow) getSelectedRepo() *tracker.TrackedFolder {

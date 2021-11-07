@@ -1,6 +1,7 @@
 package tracker
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -90,13 +91,13 @@ func (f *TrackedFolder) GoStatus() string {
 // HasRemote returns true if the repository has a Git remote repository.
 func (f *TrackedFolder) HasRemote() string {
 	if !f.IsGit() {
-		return ""
+		return "                   "
 	}
 	if f.hasRemote {
-		return "yes"
+		return "has remote"
 	}
 
-	return "no  "
+	return "                   "
 }
 
 // IsGit returns true if the folder points to a Git repository (has a .git folder).
@@ -149,9 +150,15 @@ func (f *TrackedFolder) getGoStatus(path string) string {
 	cmd.Dir = path
 	out, err := cmd.Output()
 	if err != nil {
-		return ""
+		return fmt.Sprintf("%15s", "")
 	}
-	return strings.Replace(string(out), "\n", "", -1)
+	result := strings.Replace(string(out), "\n", "", -1)
+
+	if len(result) == 0 {
+		return fmt.Sprintf("%15s", result)
+	} else {
+		return fmt.Sprintf("%10s", result)
+	}
 }
 
 func (f *TrackedFolder) getNoOfChanges(status string) int {
