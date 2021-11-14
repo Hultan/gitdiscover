@@ -3,6 +3,12 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/gotk3/gotk3 v0.6.1 h1:GJ400a0ecEEWrzjBvzBzH+pB/esEMIGdB9zPSmBdoeo=
 github.com/gotk3/gotk3 v0.6.1/go.mod h1:/hqFpkNa9T3JgNAE2fLvCdov7c5bw//FHNZrZ3Uv9/Q=
+github.com/hultan/gitstatus v1.0.0 h1:IZjE5xr8m+9e8Cg762Z3KiuRtNWm52Cp+XT2SwNh5fA=
+github.com/hultan/gitstatus v1.0.0/go.mod h1:OyoZcNsH/d7TksJVfC+cl1Q4MeRCLiXjYN7esrvKuXY=
+github.com/hultan/gitstatusprompt v1.0.0 h1:EFgoKJfZz5u2NJc+s7i1X4OTrisMsHZyVPMNugn4/Zw=
+github.com/hultan/gitstatusprompt v1.0.0/go.mod h1:rnHtpNHgsoMV2i88/ZRSS0hwYAXYF+MbXbylHwWa/Nw=
+github.com/hultan/gomod v1.0.1 h1:9eLtKcZQ0MyvWs65gjhDXwRG33VJViG79SKS9DGLgOM=
+github.com/hultan/gomod v1.0.1/go.mod h1:YkfKc/bmjqBEpR/lbcZBFg/olVoDOQm6GPcA/d/1CkM=
 github.com/hultan/softteam v1.2.6 h1:qScP582xAoe+9/CL2PlMMA7eA3elGht5iHMlDeetWr8=
 github.com/hultan/softteam v1.2.6/go.mod h1:nQlNmvyd/tuyrV5lucalOSTJfCJMQuGWmD71OolFTYw=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=

@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"os/exec"
 	"path"
 	"regexp"
-	"strconv"
 	"strings"
 	"time"
+
+	gitStatus "github.com/hultan/gitstatus"
+	gitStatusPrompt "github.com/hultan/gitstatusprompt"
+	goMod "github.com/hultan/gomod"
 )
 
 // TrackedFolders is a slice of tracked folders.
@@ -48,7 +50,7 @@ func (f *TrackedFolder) refresh() {
 		f.hasRemote = f.getHasRemote(f.path)
 		f.gitStatus = f.getGitStatus(f.path)
 		f.goStatus = f.getGoStatus(f.path)
-		f.changes = f.getNoOfChanges(f.gitStatus)
+		f.changes = f.getNoOfChanges(f.path)
 	}
 }
 
@@ -131,29 +133,19 @@ func (f *TrackedFolder) getModifiedDate(path string) time.Time {
 
 // Get the git status
 func (f *TrackedFolder) getGitStatus(path string) string {
-	const gitPromptCommand = "/home/per/bin/gitprompt-go"
-	const gitPromptCommandFormat = "$(BRANCH)$(AHEAD)$(BEHIND)$(SEPARATOR)$(UNTRACKED)$(MODIFIED)$(DELETED)$(UNMERGED)$(STAGED)"
-	cmd := exec.Command(gitPromptCommand, "-f", gitPromptCommandFormat)
-	cmd.Dir = path
-	out, err := cmd.Output()
-	if err != nil {
-		return ""
-	}
-	return strings.Replace(string(out), "\n", "", -1)
+	p := gitStatusPrompt.GitStatusPrompt{}
+	status := p.GetPrompt(path)
+	return status
 }
 
 // Get the go status
 func (f *TrackedFolder) getGoStatus(path string) string {
-	const gitPromptCommand = "/home/per/bin/gitprompt-go"
-	const gitPromptCommandFormat = "$(GOVERSION)"
-	cmd := exec.Command(gitPromptCommand, "-f", gitPromptCommandFormat)
-	cmd.Dir = path
-	out, err := cmd.Output()
-	if err != nil {
+	m := goMod.GoMod{}
+	info := m.GetInfo(path)
+	if info == nil {
 		return fmt.Sprintf("%15s", "")
 	}
-	result := strings.Replace(string(out), "\n", "", -1)
-
+	result := fmt.Sprintf("Go %s", info.Version())
 	if len(result) == 0 {
 		return fmt.Sprintf("%15s", result)
 	} else {
@@ -161,19 +153,13 @@ func (f *TrackedFolder) getGoStatus(path string) string {
 	}
 }
 
-func (f *TrackedFolder) getNoOfChanges(status string) int {
-	fields := strings.FieldsFunc(status, func(r rune) bool {
-		return !strings.ContainsRune("0123456789", r)
-	})
-	changes := 0
-	for _, field := range fields {
-		c, err := strconv.Atoi(field)
-		if err != nil {
-			c = 0
-		}
-		changes += c
+func (f *TrackedFolder) getNoOfChanges(path string) int {
+	gs := gitStatus.GitStatus{}
+	status, err := gs.GetStatus(path)
+	if err != nil {
+		return 0
 	}
-	return changes
+	return status.Untracked() + status.Modified() + status.Deleted() + status.Unmerged()
 }
 
 func (f *TrackedFolder) getHasRemote(repoPath string) bool {
