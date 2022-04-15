@@ -1,4 +1,4 @@
-package gui
+package gitdiscover_gui
 
 import (
 	"fmt"
@@ -13,8 +13,7 @@ import (
 	"github.com/gotk3/gotk3/gtk"
 	"github.com/sirupsen/logrus"
 
-	gitConfig "github.com/hultan/gitdiscover/internal/config"
-	"github.com/hultan/gitdiscover/internal/tracker"
+	"github.com/hultan/gitdiscover/internal/gitdiscover"
 	"github.com/hultan/softteam/framework"
 )
 
@@ -22,12 +21,12 @@ type MainWindow struct {
 	ApplicationLogPath string
 
 	logger *logrus.Logger
-	config *gitConfig.Config
+	config *gitdiscover.Config
 
 	builder           *framework.GtkBuilder
 	window            *gtk.ApplicationWindow
 	repositoryListBox *gtk.ListBox
-	tracker           *tracker.Tracker
+	tracker           *gitdiscover.Tracker
 	infoBar           *InfoBar
 	toolBar           *gtk.Toolbar
 
@@ -41,7 +40,7 @@ type MainWindow struct {
 var colors = []string{"FFFFFF", "8DB38B", "D2AB99", "ADD3AB", "C290AA", "A26690"}
 
 // NewMainWindow : Creates a new MainWindow object
-func NewMainWindow(logger *logrus.Logger, config *gitConfig.Config) *MainWindow {
+func NewMainWindow(logger *logrus.Logger, config *gitdiscover.Config) *MainWindow {
 	mainWindow := new(MainWindow)
 	mainWindow.logger = logger
 	mainWindow.config = config
@@ -226,18 +225,18 @@ func (m *MainWindow) refreshRepositoryList() {
 	m.clearList()
 
 	if m.tracker == nil {
-		m.tracker = tracker.NewTracker(m.config)
+		m.tracker = gitdiscover.NewTracker(m.config)
 	} else {
 		m.tracker.Refresh()
 	}
 
 	switch m.sortBy {
 	case sortByName:
-		sort.Sort(tracker.ByName{TrackedFolders: m.tracker.Folders})
+		sort.Sort(gitdiscover.ByName{TrackedFolders: m.tracker.Folders})
 	case sortByModifiedDate:
-		sort.Sort(tracker.ByModifiedDate{TrackedFolders: m.tracker.Folders})
+		sort.Sort(gitdiscover.ByModifiedDate{TrackedFolders: m.tracker.Folders})
 	case sortByChanges:
-		sort.Sort(tracker.ByChanges{TrackedFolders: m.tracker.Folders})
+		sort.Sort(gitdiscover.ByChanges{TrackedFolders: m.tracker.Folders})
 	}
 
 	sgDate, _ := gtk.SizeGroupNew(gtk.SIZE_GROUP_BOTH)
@@ -304,7 +303,7 @@ func (m *MainWindow) createListSeparator(text string) *gtk.Box {
 	return box
 }
 
-func (m *MainWindow) createListItem(index int, dateFormat string, repo *tracker.TrackedFolder,
+func (m *MainWindow) createListItem(index int, dateFormat string, repo *gitdiscover.TrackedFolder,
 	sgDate *gtk.SizeGroup) *gtk.Box {
 
 	// Create main box
@@ -419,7 +418,7 @@ func (m *MainWindow) getMarkup(text, color string) string {
 	return markup
 }
 
-func (m *MainWindow) getSelectedRepo() *tracker.TrackedFolder {
+func (m *MainWindow) getSelectedRepo() *gitdiscover.TrackedFolder {
 	row := m.repositoryListBox.GetSelectedRow()
 	if row == nil {
 		return nil
@@ -465,7 +464,7 @@ func (m *MainWindow) openLog() {
 	}()
 }
 
-func (m *MainWindow) openInExternalApplication(name string, repo *tracker.TrackedFolder) {
+func (m *MainWindow) openInExternalApplication(name string, repo *gitdiscover.TrackedFolder) {
 	// Find application
 	app := m.config.GetExternalApplicationByName(name)
 	if app == nil {

@@ -1,11 +1,11 @@
-package gui
+package gitdiscover_gui
 
 import (
 	"fmt"
 
 	"github.com/gotk3/gotk3/gtk"
 
-	"github.com/hultan/gitdiscover/internal/config"
+	"github.com/hultan/gitdiscover/internal/gitdiscover"
 	"github.com/hultan/softteam/framework"
 
 	"github.com/sirupsen/logrus"
@@ -14,21 +14,21 @@ import (
 type ExternalApplicationDialog struct {
 	window  *gtk.Window
 	builder *framework.GtkBuilder
-	config  *config.Config
+	config  *gitdiscover.Config
 	logger  *logrus.Logger
 
 	nameEntry     *gtk.Entry
 	commandEntry  *gtk.Entry
 	argumentEntry *gtk.Entry
 
-	externalApplication config.ExternalApplication
+	externalApplication gitdiscover.ExternalApplication
 	originalName        string
 	mode                externalApplicationModeType
 
 	saveCallback func() bool
 }
 
-func NewExternalApplicationDialog(logger *logrus.Logger, config *config.Config) *ExternalApplicationDialog {
+func NewExternalApplicationDialog(logger *logrus.Logger, config *gitdiscover.Config) *ExternalApplicationDialog {
 	// TODO : Send in parent object instead (e) of builder, logger and config
 	dialog := new(ExternalApplicationDialog)
 	dialog.config = config

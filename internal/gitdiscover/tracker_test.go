@@ -1,15 +1,13 @@
-package tracker
+package gitdiscover
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-
-	"github.com/hultan/gitdiscover/internal/config"
 )
 
 func TestDiscover_GetRepositories(t *testing.T) {
-	config := config.NewConfig()
+	config := NewConfig()
 	config.Load()
 
 	discover := NewTracker(config)

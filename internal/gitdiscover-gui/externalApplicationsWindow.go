@@ -1,9 +1,9 @@
-package gui
+package gitdiscover_gui
 
 import (
 	"github.com/gotk3/gotk3/gtk"
 
-	"github.com/hultan/gitdiscover/internal/config"
+	"github.com/hultan/gitdiscover/internal/gitdiscover"
 	"github.com/hultan/softteam/framework"
 
 	"github.com/sirupsen/logrus"
@@ -12,13 +12,13 @@ import (
 type ExternalApplicationsWindow struct {
 	window  *gtk.Window
 	builder *framework.GtkBuilder
-	config  *config.Config
+	config  *gitdiscover.Config
 	logger  *logrus.Logger
 	listBox *gtk.ListBox
 	refresh func()
 }
 
-func NewExternalApplicationsWindow(logger *logrus.Logger, config *config.Config) *ExternalApplicationsWindow {
+func NewExternalApplicationsWindow(logger *logrus.Logger, config *gitdiscover.Config) *ExternalApplicationsWindow {
 	window := new(ExternalApplicationsWindow)
 	window.config = config
 	window.logger = logger
@@ -91,7 +91,7 @@ func (e *ExternalApplicationsWindow) addExternalApplication() {
 	dialog := NewExternalApplicationDialog(e.logger, e.config)
 	dialog.mode = externalApplicationModeNew
 	dialog.openDialog(e.window, func() bool {
-		app := config.ExternalApplication{
+		app := gitdiscover.ExternalApplication{
 			Name:     dialog.externalApplication.Name,
 			Command:  dialog.externalApplication.Command,
 			Argument: dialog.externalApplication.Argument,
@@ -153,7 +153,7 @@ func (e *ExternalApplicationsWindow) clearListBox() {
 	}
 }
 
-func (e *ExternalApplicationsWindow) createListItem(application config.ExternalApplication,
+func (e *ExternalApplicationsWindow) createListItem(application gitdiscover.ExternalApplication,
 	sgName, sgCommand, sgArgument *gtk.SizeGroup) *gtk.Box {
 
 	box, err := gtk.BoxNew(gtk.ORIENTATION_HORIZONTAL, 10)
@@ -198,7 +198,7 @@ func (e *ExternalApplicationsWindow) createListItem(application config.ExternalA
 	return box
 }
 
-func (e *ExternalApplicationsWindow) getSelectedApplication() (*config.ExternalApplication, int) {
+func (e *ExternalApplicationsWindow) getSelectedApplication() (*gitdiscover.ExternalApplication, int) {
 	row := e.listBox.GetSelectedRow()
 	if row == nil {
 		// TODO : MessageBox "Pleade select an application!"

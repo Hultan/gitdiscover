@@ -1,4 +1,4 @@
-package tracker
+package gitdiscover
 
 // ByName sorts TrackedFolders by their name.
 type ByName struct{ TrackedFolders }

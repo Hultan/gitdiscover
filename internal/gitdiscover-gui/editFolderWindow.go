@@ -1,10 +1,10 @@
-package gui
+package gitdiscover_gui
 
 import (
 	"github.com/gotk3/gotk3/gdk"
 	"github.com/gotk3/gotk3/gtk"
 
-	"github.com/hultan/gitdiscover/internal/tracker"
+	"github.com/hultan/gitdiscover/internal/gitdiscover"
 	"github.com/hultan/softteam/framework"
 )
 
@@ -13,7 +13,7 @@ type EditFolderWindow struct {
 	window         *gtk.Window
 	builder        *framework.GtkBuilder
 	image          *gtk.Image
-	folder         *tracker.TrackedFolder
+	folder         *gitdiscover.TrackedFolder
 	folderIconPath *gtk.Entry
 }
 
@@ -23,7 +23,7 @@ func NewEditFolderWindow(mainWindow *MainWindow) *EditFolderWindow {
 	return edit
 }
 
-func (e *EditFolderWindow) openWindow(folder *tracker.TrackedFolder) {
+func (e *EditFolderWindow) openWindow(folder *gitdiscover.TrackedFolder) {
 	// Create a new softBuilder
 	fw := framework.NewFramework()
 	builder, err := fw.Gtk.CreateBuilder("editFolderWindow.ui")

@@ -1,4 +1,4 @@
-package gui
+package gitdiscover_gui
 
 import (
 	"io/ioutil"
@@ -17,6 +17,7 @@ type PopupMenu struct {
 	popupAddFolder            *gtk.MenuItem
 	popupEditFolder           *gtk.MenuItem
 	popupRemoveFolder         *gtk.MenuItem
+	popupFavorite             *gtk.MenuItem
 	popupExternalApplications *gtk.MenuItem
 	popupGitStatus            *gtk.MenuItem
 	popupGitDiff              *gtk.MenuItem
@@ -43,6 +44,7 @@ func (p *PopupMenu) Setup() {
 	p.popupAddFolder = builder.GetObject("popupAddFolder").(*gtk.MenuItem)
 	p.popupEditFolder = builder.GetObject("popupEditFolder").(*gtk.MenuItem)
 	p.popupRemoveFolder = builder.GetObject("popupRemoveFolder").(*gtk.MenuItem)
+	p.popupFavorite = builder.GetObject("popupFavorite").(*gtk.MenuItem)
 	p.popupExternalApplications = builder.GetObject("popupExternalApplications").(*gtk.MenuItem)
 	p.popupGit = builder.GetObject("popupGit").(*gtk.MenuItem)
 	p.popupGitStatus = builder.GetObject("popupGitStatus").(*gtk.MenuItem)
@@ -108,6 +110,17 @@ func (p *PopupMenu) setupEvents() {
 
 	p.popupRemoveFolder.Connect("activate", func() {
 		p.mainWindow.removeRepositoryButtonClicked()
+	})
+
+	p.popupFavorite.Connect("activate", func() {
+		// Get the currently selected repo
+		repo := p.mainWindow.getSelectedRepo()
+
+		if repo == nil {
+			p.mainWindow.infoBar.ShowInfoWithTimeout("Please select a repo...", 5)
+			return
+		}
+
 	})
 
 	p.popupGitStatus.Connect("activate", func() {

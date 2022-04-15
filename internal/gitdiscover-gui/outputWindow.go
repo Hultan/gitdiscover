@@ -1,4 +1,4 @@
-package gui
+package gitdiscover_gui
 
 import (
 	"bufio"
@@ -12,8 +12,8 @@ import (
 
 type OutputWindow struct {
 	builder *framework.GtkBuilder
-	logger *logrus.Logger
-	window *gtk.Window
+	logger  *logrus.Logger
+	window  *gtk.Window
 }
 
 func NewOutputWindow(builder *framework.GtkBuilder, logger *logrus.Logger) *OutputWindow {
@@ -71,7 +71,7 @@ func (o *OutputWindow) openWindow(header, text string, gitCommand gitCommandType
 		break
 
 	}
-	buffer.InsertMarkup(buffer.GetStartIter(),text)
+	buffer.InsertMarkup(buffer.GetStartIter(), text)
 	// buffer.SetText(formatTextGitStatus(text))
 	textView.SetEditable(false)
 
@@ -85,7 +85,7 @@ func (o *OutputWindow) closeWindow() {
 }
 
 func getHeader(header string, outputType gitCommandType) string {
-	if header=="" {
+	if header == "" {
 		switch outputType {
 		case outputGitStatus:
 			return "git status"
@@ -100,9 +100,9 @@ func getHeader(header string, outputType gitCommandType) string {
 }
 
 func (o *OutputWindow) formatTextGeneral(text string) string {
-	text = strings.Replace(text, "&", "&amp;",-1)
-	text = strings.Replace(text, "<", "&lt;",-1)
-	text = strings.Replace(text, ">", "&gt;",-1)
+	text = strings.Replace(text, "&", "&amp;", -1)
+	text = strings.Replace(text, "<", "&lt;", -1)
+	text = strings.Replace(text, ">", "&gt;", -1)
 
 	return text
 }
@@ -113,15 +113,15 @@ func (o *OutputWindow) formatTextGitStatus(text string) string {
 	for scanner.Scan() {
 		line := scanner.Text()
 		trimmedLine := strings.TrimSpace(line)
-		if strings.HasPrefix( trimmedLine, "modified:") {
+		if strings.HasPrefix(trimmedLine, "modified:") {
 			result += `<span color="red">` + line + "</span>\n"
 			continue
 		}
-		if strings.HasPrefix( trimmedLine, "deleted:") {
+		if strings.HasPrefix(trimmedLine, "deleted:") {
 			result += `<span color="red">` + line + "</span>\n"
 			continue
 		}
-		if strings.HasPrefix( trimmedLine, "new file:") {
+		if strings.HasPrefix(trimmedLine, "new file:") {
 			result += `<span color="green">` + line + "</span>\n"
 			continue
 		}
@@ -136,8 +136,8 @@ func (o *OutputWindow) formatTextGitStatus(text string) string {
 		return result
 	}
 
-	result = strings.Replace(result,`(use "git add &lt;file&gt;..." to include in what will be committed)`,
-		`(use "git add &lt;file&gt;..." to include in what will be committed)<span color="red">`,-1)
+	result = strings.Replace(result, `(use "git add &lt;file&gt;..." to include in what will be committed)`,
+		`(use "git add &lt;file&gt;..." to include in what will be committed)<span color="red">`, -1)
 
 	result += "</span>"
 
@@ -150,15 +150,15 @@ func (o *OutputWindow) formatTextGitDiff(text string) string {
 	for scanner.Scan() {
 		line := scanner.Text()
 		trimmedLine := strings.TrimSpace(line)
-		if strings.HasPrefix( trimmedLine, "+++") {
+		if strings.HasPrefix(trimmedLine, "+++") {
 			result += `<span color="red">` + line + "</span>\n"
 			continue
 		}
-		if strings.HasPrefix( trimmedLine, "-") {
+		if strings.HasPrefix(trimmedLine, "-") {
 			result += `<span color="red">` + line + "</span>\n"
 			continue
 		}
-		if strings.HasPrefix( trimmedLine, "+") {
+		if strings.HasPrefix(trimmedLine, "+") {
 			result += `<span color="green">` + line + "</span>\n"
 			continue
 		}
@@ -174,7 +174,7 @@ func (o *OutputWindow) formatTextGitLog(text string) string {
 	for scanner.Scan() {
 		line := scanner.Text()
 		trimmedLine := strings.TrimSpace(line)
-		if strings.HasPrefix( trimmedLine, "commit ") {
+		if strings.HasPrefix(trimmedLine, "commit ") {
 			result += `<span color="yellow">` + line + "</span>\n"
 			continue
 		}

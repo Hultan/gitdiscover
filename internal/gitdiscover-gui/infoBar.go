@@ -1,4 +1,4 @@
-package gui
+package gitdiscover_gui
 
 import (
 	"github.com/gotk3/gotk3/glib"
@@ -29,7 +29,7 @@ func (i *InfoBar) ShowInfoWithTimeout(text string, seconds uint) {
 	i.infoBar.ShowAll()
 
 	glib.TimeoutSecondsAdd(seconds, func() {
-		i.HideInfoBar ()
+		i.HideInfoBar()
 	})
 }
 

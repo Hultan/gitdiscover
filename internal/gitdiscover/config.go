@@ -1,4 +1,4 @@
-package config
+package gitdiscover
 
 import (
 	"encoding/json"
@@ -18,8 +18,9 @@ type Config struct {
 
 // Repository : A repository in the config
 type Repository struct {
-	Path      string `json:"path"`
-	ImagePath string `json:"image-path"`
+	Path       string `json:"path"`
+	ImagePath  string `json:"image-path"`
+	IsFavorite bool   `json:"is-favorite"`
 }
 
 // ExternalApplication : An external application in the config

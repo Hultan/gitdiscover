@@ -7,8 +7,8 @@ import (
 	"github.com/gotk3/gotk3/gtk"
 	"github.com/sirupsen/logrus"
 
-	gitConfig "github.com/hultan/gitdiscover/internal/config"
-	"github.com/hultan/gitdiscover/internal/gui"
+	gitConfig "github.com/hultan/gitdiscover/internal/gitdiscover"
+	"github.com/hultan/gitdiscover/internal/gitdiscover-gui"
 )
 
 var (
@@ -82,7 +82,7 @@ func showGUI(logger *logrus.Logger, config *gitConfig.Config) {
 		exitProgram(exitUnknown, err)
 	}
 
-	mainForm := gui.NewMainWindow(logger, config)
+	mainForm := gitdiscover_gui.NewMainWindow(logger, config)
 	mainForm.ApplicationLogPath = applicationLogPath
 	// Hook up the activate event handler
 	_ = application.Connect("activate", mainForm.OpenMainWindow)

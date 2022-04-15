@@ -1,4 +1,4 @@
-package gui
+package gitdiscover_gui
 
 const (
 	applicationVersion   = "3.8.1"
