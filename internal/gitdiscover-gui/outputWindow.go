@@ -10,20 +10,20 @@ import (
 	"github.com/hultan/softteam/framework"
 )
 
-type OutputWindow struct {
+type outputWindow struct {
 	builder *framework.GtkBuilder
 	logger  *logrus.Logger
 	window  *gtk.Window
 }
 
-func NewOutputWindow(builder *framework.GtkBuilder, logger *logrus.Logger) *OutputWindow {
-	output := new(OutputWindow)
+func newOutputWindow(builder *framework.GtkBuilder, logger *logrus.Logger) *outputWindow {
+	output := new(outputWindow)
 	output.builder = builder
 	output.logger = logger
 	return output
 }
 
-func (o *OutputWindow) openWindow(header, text string, gitCommand gitCommandType) {
+func (o *outputWindow) openWindow(header, text string, gitCommand gitCommandType) {
 	// Create a new softBuilder
 	fw := framework.NewFramework()
 	builder, err := fw.Gtk.CreateBuilder("outputWindow.ui")
@@ -44,7 +44,9 @@ func (o *OutputWindow) openWindow(header, text string, gitCommand gitCommandType
 	button.Connect("clicked", o.closeWindow)
 
 	label := o.builder.GetObject("labelHeader").(*gtk.Label)
-	header = getHeader(header, gitCommand)
+	if header == "" {
+		header = o.getHeader(gitCommand)
+	}
 	label.SetText(header)
 
 	textView := o.builder.GetObject("textView").(*gtk.TextView)
@@ -53,8 +55,21 @@ func (o *OutputWindow) openWindow(header, text string, gitCommand gitCommandType
 		o.logger.Error(err)
 		return
 	}
-	textView.SetBuffer(buffer)
 
+	textView.SetBuffer(buffer)
+	o.setTextForTextView(text, gitCommand, buffer)
+	textView.SetEditable(false)
+
+	o.window = window
+	window.ShowAll()
+}
+
+func (o *outputWindow) closeWindow() {
+	o.window.Hide()
+	o.window = nil
+}
+
+func (o *outputWindow) setTextForTextView(text string, gitCommand gitCommandType, buffer *gtk.TextBuffer) {
 	// Remove illegal characters
 	text = o.formatTextGeneral(text)
 
@@ -72,34 +87,22 @@ func (o *OutputWindow) openWindow(header, text string, gitCommand gitCommandType
 
 	}
 	buffer.InsertMarkup(buffer.GetStartIter(), text)
-	// buffer.SetText(formatTextGitStatus(text))
-	textView.SetEditable(false)
-
-	o.window = window
-	window.ShowAll()
 }
 
-func (o *OutputWindow) closeWindow() {
-	o.window.Hide()
-	o.window = nil
-}
-
-func getHeader(header string, outputType gitCommandType) string {
-	if header == "" {
-		switch outputType {
-		case outputGitStatus:
-			return "git status"
-		case outputGitLog:
-			return "git log"
-		case outputGitDiff:
-			return "git diff"
-		}
+func (o *outputWindow) getHeader(gitCommand gitCommandType) string {
+	switch gitCommand {
+	case outputGitStatus:
+		return "git status"
+	case outputGitLog:
+		return "git log"
+	case outputGitDiff:
+		return "git diff"
+	default:
+		return ""
 	}
-
-	return header
 }
 
-func (o *OutputWindow) formatTextGeneral(text string) string {
+func (o *outputWindow) formatTextGeneral(text string) string {
 	text = strings.Replace(text, "&", "&amp;", -1)
 	text = strings.Replace(text, "<", "&lt;", -1)
 	text = strings.Replace(text, ">", "&gt;", -1)
@@ -107,7 +110,7 @@ func (o *OutputWindow) formatTextGeneral(text string) string {
 	return text
 }
 
-func (o *OutputWindow) formatTextGitStatus(text string) string {
+func (o *outputWindow) formatTextGitStatus(text string) string {
 	var result = ""
 	scanner := bufio.NewScanner(strings.NewReader(text))
 	for scanner.Scan() {
@@ -144,7 +147,7 @@ func (o *OutputWindow) formatTextGitStatus(text string) string {
 	return result
 }
 
-func (o *OutputWindow) formatTextGitDiff(text string) string {
+func (o *outputWindow) formatTextGitDiff(text string) string {
 	var result = ""
 	scanner := bufio.NewScanner(strings.NewReader(text))
 	for scanner.Scan() {
@@ -168,7 +171,7 @@ func (o *OutputWindow) formatTextGitDiff(text string) string {
 	return result
 }
 
-func (o *OutputWindow) formatTextGitLog(text string) string {
+func (o *outputWindow) formatTextGitLog(text string) string {
 	var result = ""
 	scanner := bufio.NewScanner(strings.NewReader(text))
 	for scanner.Scan() {

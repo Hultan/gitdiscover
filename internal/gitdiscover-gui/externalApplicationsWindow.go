@@ -90,7 +90,7 @@ func (e *externalApplicationsWindow) fillExternalApplicationsList() {
 }
 
 func (e *externalApplicationsWindow) addExternalApplication() {
-	dialog := NewExternalApplicationDialog(e.logger, e.config)
+	dialog := newExternalApplicationDialog(e.logger, e.config)
 	dialog.mode = externalApplicationModeNew
 	dialog.openDialog(e.window, func() bool {
 		app := gitdiscover.ExternalApplication{
@@ -128,7 +128,7 @@ func (e *externalApplicationsWindow) editExternalApplication() {
 }
 
 func (e *externalApplicationsWindow) editExternalApplicationByIndex(index int) {
-	dialog := NewExternalApplicationDialog(e.logger, e.config)
+	dialog := newExternalApplicationDialog(e.logger, e.config)
 	dialog.externalApplication = e.config.ExternalApplications[index]
 	dialog.mode = externalApplicationModeEdit
 	dialog.openDialog(e.window, func() bool {

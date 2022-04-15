@@ -18,7 +18,7 @@ func (m *MainWindow) openInExternalApplication(name string, repo *gitdiscover.Tr
 		// with when the external application buttons are
 		// refreshed, then it can happen.
 		text := fmt.Sprintf("Failed to find an application with name : %s", name)
-		m.infoBar.ShowError(text)
+		m.infoBar.showError(text)
 		m.logger.Error(text)
 		return
 	}

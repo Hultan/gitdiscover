@@ -24,17 +24,17 @@ func (m *MainWindow) getSelectedRepo() *gitdiscover.TrackedFolder {
 	}
 	boxObj, err := row.GetChild()
 	if err != nil {
-		m.infoBar.ShowError(err.Error())
+		m.infoBar.showError(err.Error())
 		return nil
 	}
 	box, ok := boxObj.(*gtk.Box)
 	if !ok {
-		m.infoBar.ShowError("Failed to convert to *gtk.Widget")
+		m.infoBar.showError("Failed to convert to *gtk.Widget")
 		return nil
 	}
 	name, err := box.GetName()
 	if err != nil {
-		m.infoBar.ShowError(err.Error())
+		m.infoBar.showError(err.Error())
 		return nil
 	}
 	if name == "sep" {
@@ -43,7 +43,7 @@ func (m *MainWindow) getSelectedRepo() *gitdiscover.TrackedFolder {
 	indexString := name[4:]
 	index, err := strconv.Atoi(indexString)
 	if err != nil {
-		m.infoBar.ShowError(err.Error())
+		m.infoBar.showError(err.Error())
 		return nil
 	}
 	repo := m.tracker.Folders[index]
@@ -80,7 +80,7 @@ func (m *MainWindow) executeCommand(command, arguments string) string {
 	if err != nil {
 		m.logger.Error("Failed to open external application: ", command, " ", arguments)
 		m.logger.Error(err)
-		m.infoBar.ShowError(err.Error())
+		m.infoBar.showError(err.Error())
 		return ""
 	}
 

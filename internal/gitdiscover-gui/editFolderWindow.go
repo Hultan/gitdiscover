@@ -8,7 +8,7 @@ import (
 	"github.com/hultan/softteam/framework"
 )
 
-type EditFolderWindow struct {
+type editFolderWindow struct {
 	mainWindow     *MainWindow
 	window         *gtk.Window
 	builder        *framework.GtkBuilder
@@ -17,13 +17,13 @@ type EditFolderWindow struct {
 	folderIconPath *gtk.Entry
 }
 
-func NewEditFolderWindow(mainWindow *MainWindow) *EditFolderWindow {
-	edit := new(EditFolderWindow)
+func newEditFolderWindow(mainWindow *MainWindow) *editFolderWindow {
+	edit := new(editFolderWindow)
 	edit.mainWindow = mainWindow
 	return edit
 }
 
-func (e *EditFolderWindow) openWindow(folder *gitdiscover.TrackedFolder) {
+func (e *editFolderWindow) openWindow(folder *gitdiscover.TrackedFolder) {
 	// Create a new softBuilder
 	fw := framework.NewFramework()
 	builder, err := fw.Gtk.CreateBuilder("editFolderWindow.ui")
@@ -66,14 +66,13 @@ func (e *EditFolderWindow) openWindow(folder *gitdiscover.TrackedFolder) {
 	button = e.builder.GetObject("selectFolderIconPathButton").(*gtk.Button)
 	button.Connect("clicked", func() {
 		e.chooseIcon()
-
 	})
 
 	e.window = window
 	window.ShowAll()
 }
 
-func (e *EditFolderWindow) save() {
+func (e *editFolderWindow) save() {
 	path, err := e.folderIconPath.GetText()
 	if err != nil {
 		e.mainWindow.logger.Error(err)
@@ -84,12 +83,12 @@ func (e *EditFolderWindow) save() {
 	e.closeWindow()
 }
 
-func (e *EditFolderWindow) closeWindow() {
+func (e *editFolderWindow) closeWindow() {
 	e.window.Hide()
 	e.window = nil
 }
 
-func (e *EditFolderWindow) tryLoadIcon(path string) {
+func (e *editFolderWindow) tryLoadIcon(path string) {
 	pix, err := gdk.PixbufNewFromFileAtSize(path, 16, 16)
 	if err != nil {
 		e.mainWindow.logger.Error(err)
@@ -110,7 +109,7 @@ func (e *EditFolderWindow) tryLoadIcon(path string) {
 	e.image.SetFromPixbuf(pix)
 }
 
-func (e *EditFolderWindow) chooseIcon() {
+func (e *editFolderWindow) chooseIcon() {
 	fileDialog, err := gtk.FileChooserDialogNewWith2Buttons(
 		"Choose file...",
 		e.window,
@@ -118,13 +117,15 @@ func (e *EditFolderWindow) chooseIcon() {
 		"Cancel", gtk.RESPONSE_DELETE_EVENT,
 		"Open", gtk.RESPONSE_ACCEPT)
 	if err != nil {
-		// TODO
+		e.mainWindow.logger.Error(err)
+		return
 	}
 	defer fileDialog.Destroy()
 
 	fileFilter, err := gtk.FileFilterNew()
 	if err != nil {
-		// TODO
+		e.mainWindow.logger.Error(err)
+		return
 	}
 	fileFilter.SetName("Image files")
 	fileFilter.AddPattern("*.png")

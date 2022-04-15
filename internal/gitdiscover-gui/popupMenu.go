@@ -10,7 +10,7 @@ import (
 	"github.com/hultan/softteam/framework"
 )
 
-type PopupMenu struct {
+type popupMenu struct {
 	mainWindow *MainWindow
 	popupMenu  *gtk.Menu
 
@@ -25,13 +25,13 @@ type PopupMenu struct {
 	popupGit                  *gtk.MenuItem
 }
 
-func NewPopupMenu(window *MainWindow) *PopupMenu {
-	menu := new(PopupMenu)
+func newPopupMenu(window *MainWindow) *popupMenu {
+	menu := new(popupMenu)
 	menu.mainWindow = window
 	return menu
 }
 
-func (p *PopupMenu) Setup() {
+func (p *popupMenu) setupPopupMenu() {
 	// Create a new softBuilder
 	fw := framework.NewFramework()
 	builder, err := fw.Gtk.CreateBuilder("mainWindow.ui")
@@ -54,7 +54,7 @@ func (p *PopupMenu) Setup() {
 	p.setupEvents()
 }
 
-func (p *PopupMenu) setupEvents() {
+func (p *popupMenu) setupEvents() {
 	_ = p.mainWindow.window.Connect("button-release-event", func(window *gtk.ApplicationWindow, event *gdk.Event) {
 		// If right mouse button is NOT pressed, return
 		buttonEvent := gdk.EventButtonNewFromEvent(event)
@@ -65,7 +65,7 @@ func (p *PopupMenu) setupEvents() {
 		// Get the currently selected repo
 		repo := p.mainWindow.getSelectedRepo()
 		if repo == nil {
-			p.mainWindow.infoBar.ShowInfoWithTimeout("Please select a repo...", 5)
+			p.mainWindow.infoBar.showInfoWithTimeout("Please select a repo...", 5)
 			return
 		}
 
@@ -117,7 +117,7 @@ func (p *PopupMenu) setupEvents() {
 		repo := p.mainWindow.getSelectedRepo()
 
 		if repo == nil {
-			p.mainWindow.infoBar.ShowInfoWithTimeout("Please select a repo...", 5)
+			p.mainWindow.infoBar.showInfoWithTimeout("Please select a repo...", 5)
 			return
 		}
 
@@ -137,11 +137,11 @@ func (p *PopupMenu) setupEvents() {
 }
 
 // runGitCommand : Run a GIT command
-func (p *PopupMenu) runGitCommand(command string, outputType gitCommandType) {
+func (p *popupMenu) runGitCommand(command string, outputType gitCommandType) {
 	// Get the currently selected repo
 	repo := p.mainWindow.getSelectedRepo()
 	if repo == nil {
-		p.mainWindow.infoBar.ShowInfoWithTimeout("Please select a repo...", 5)
+		p.mainWindow.infoBar.showInfoWithTimeout("Please select a repo...", 5)
 		return
 	}
 
@@ -149,25 +149,25 @@ func (p *PopupMenu) runGitCommand(command string, outputType gitCommandType) {
 	file, err := p.createFile(repo.Path(), command)
 	if err != nil {
 		p.mainWindow.logger.Error(err)
-		p.mainWindow.infoBar.ShowError(err.Error())
+		p.mainWindow.infoBar.showError(err.Error())
 		return
 	}
 
 	// Execute the bash file
 	result := p.mainWindow.executeCommand("/bin/sh", file)
-	output := NewOutputWindow(p.mainWindow.builder, p.mainWindow.logger)
+	output := newOutputWindow(p.mainWindow.builder, p.mainWindow.logger)
 	output.openWindow("", result, outputType)
 
 	// Clean up
 	err = os.Remove(file)
 	if err != nil {
 		p.mainWindow.logger.Error(err)
-		p.mainWindow.infoBar.ShowError(err.Error())
+		p.mainWindow.infoBar.showError(err.Error())
 	}
 }
 
 // createFile : Create a temp bash file
-func (p *PopupMenu) createFile(path, command string) (string, error) {
+func (p *popupMenu) createFile(path, command string) (string, error) {
 	// Create the text for the bash file
 	text := "#!/bin/sh\n"
 	text += "cd " + path + "\n"
@@ -182,13 +182,15 @@ func (p *PopupMenu) createFile(path, command string) (string, error) {
 	}
 
 	// Write to the file
-	if _, err := tmpfile.Write(content); err != nil {
+	_, err = tmpfile.Write(content)
+	if err != nil {
 		p.mainWindow.logger.Error(err)
 		return "", err
 	}
 
-	// clean up
-	if err := tmpfile.Close(); err != nil {
+	// Clean up
+	err = tmpfile.Close()
+	if err != nil {
 		p.mainWindow.logger.Error(err)
 		return "", err
 	}

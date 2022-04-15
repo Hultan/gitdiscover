@@ -13,7 +13,7 @@ type aboutDialog struct {
 	logger *logrus.Logger
 }
 
-func NewAboutDialog(logger *logrus.Logger, parent *gtk.ApplicationWindow) *aboutDialog {
+func newAboutDialog(logger *logrus.Logger, parent *gtk.ApplicationWindow) *aboutDialog {
 	about := new(aboutDialog)
 	about.parent = parent
 	about.logger = logger

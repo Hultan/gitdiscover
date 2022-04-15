@@ -11,7 +11,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type ExternalApplicationDialog struct {
+type externalApplicationDialog struct {
 	window  *gtk.Window
 	builder *framework.GtkBuilder
 	config  *gitdiscover.Config
@@ -28,15 +28,15 @@ type ExternalApplicationDialog struct {
 	saveCallback func() bool
 }
 
-func NewExternalApplicationDialog(logger *logrus.Logger, config *gitdiscover.Config) *ExternalApplicationDialog {
+func newExternalApplicationDialog(logger *logrus.Logger, config *gitdiscover.Config) *externalApplicationDialog {
 	// TODO : Send in parent object instead (e) of builder, logger and config
-	dialog := new(ExternalApplicationDialog)
+	dialog := new(externalApplicationDialog)
 	dialog.config = config
 	dialog.logger = logger
 	return dialog
 }
 
-func (e *ExternalApplicationDialog) openDialog(parent *gtk.Window, saveCallback func() bool) {
+func (e *externalApplicationDialog) openDialog(parent *gtk.Window, saveCallback func() bool) {
 	// Create a new softBuilder
 	fw := framework.NewFramework()
 	builder, err := fw.Gtk.CreateBuilder("externalApplicationWindow.ui")
@@ -83,7 +83,7 @@ func (e *ExternalApplicationDialog) openDialog(parent *gtk.Window, saveCallback 
 	window.ShowAll()
 }
 
-func (e *ExternalApplicationDialog) save() {
+func (e *externalApplicationDialog) save() {
 	// TODO : Make sure name is not empty
 	text, err := e.nameEntry.GetText()
 	if err != nil {
@@ -93,6 +93,7 @@ func (e *ExternalApplicationDialog) save() {
 	e.externalApplication.Name = text
 
 	text, err = e.commandEntry.GetText()
+	// TODO : Make sure command is not empty and exists etc...
 	if err != nil {
 		e.logger.Error(err)
 		panic(err)
@@ -111,6 +112,6 @@ func (e *ExternalApplicationDialog) save() {
 	}
 }
 
-func (e *ExternalApplicationDialog) cancel() {
+func (e *externalApplicationDialog) cancel() {
 	e.window.Hide()
 }

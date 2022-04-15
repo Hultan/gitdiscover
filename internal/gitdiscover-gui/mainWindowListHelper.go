@@ -49,12 +49,12 @@ func (m *MainWindow) editRepositoryButtonClicked() {
 	// Get the selected repo
 	repo := m.getSelectedRepo()
 	if repo == nil {
-		m.infoBar.ShowInfoWithTimeout("Please select a project to edit.", 5)
+		m.infoBar.showInfoWithTimeout("Please select a project to edit.", 5)
 		return
 	}
 
 	// Create and show the edit repo window
-	win := NewEditFolderWindow(m)
+	win := newEditFolderWindow(m)
 	win.openWindow(repo)
 }
 
@@ -62,7 +62,7 @@ func (m *MainWindow) removeRepositoryButtonClicked() {
 	// Get the selected repo
 	repo := m.getSelectedRepo()
 	if repo == nil {
-		m.infoBar.ShowInfoWithTimeout("Please select a project to remove.", 5)
+		m.infoBar.showInfoWithTimeout("Please select a project to remove.", 5)
 		return
 	}
 
@@ -100,7 +100,7 @@ func (m *MainWindow) refreshRepositoryList() {
 	m.addSeparators()
 
 	m.repositoryListBox.ShowAll()
-	m.infoBar.HideInfoBar()
+	m.infoBar.hideInfoBar()
 }
 
 func (m *MainWindow) addSeparators() {

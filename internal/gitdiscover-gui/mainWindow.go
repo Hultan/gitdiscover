@@ -22,7 +22,7 @@ type MainWindow struct {
 	window            *gtk.ApplicationWindow
 	repositoryListBox *gtk.ListBox
 	tracker           *gitdiscover.Tracker
-	infoBar           *InfoBar
+	infoBar           *infoBar
 	toolBar           *gtk.Toolbar
 
 	sortBy             sortByColumnType
@@ -74,7 +74,7 @@ func (m *MainWindow) OpenMainWindow(app *gtk.Application) {
 	// Info bar
 	infoBar := m.builder.GetObject("infoBar").(*gtk.InfoBar)
 	labelInfoBar := m.builder.GetObject("labelInfoBar").(*gtk.Label)
-	m.infoBar = NewInfoBar(infoBar, labelInfoBar)
+	m.infoBar = newInfoBar(infoBar, labelInfoBar)
 
 	// Repository list box
 	m.repositoryListBox = m.builder.GetObject("repositoryListBox").(*gtk.ListBox)
@@ -83,15 +83,15 @@ func (m *MainWindow) OpenMainWindow(app *gtk.Application) {
 	m.refreshRepositoryList()
 
 	// Popup menu
-	popup := NewPopupMenu(m)
-	popup.Setup()
+	popup := newPopupMenu(m)
+	popup.setupPopupMenu()
 
 	// Show the main window
 	m.window.ShowAll()
-	m.infoBar.HideInfoBar()
+	m.infoBar.hideInfoBar()
 }
 
 func (m *MainWindow) openAboutDialog() {
-	about := NewAboutDialog(m.logger, m.window)
+	about := newAboutDialog(m.logger, m.window)
 	about.openAboutDialog()
 }

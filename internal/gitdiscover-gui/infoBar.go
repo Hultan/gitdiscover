@@ -5,40 +5,40 @@ import (
 	"github.com/gotk3/gotk3/gtk"
 )
 
-type InfoBar struct {
+type infoBar struct {
 	infoBar      *gtk.InfoBar
 	labelInfoBar *gtk.Label
 }
 
-func NewInfoBar(infoBar *gtk.InfoBar, labelInfoBar *gtk.Label) *InfoBar {
-	info := new(InfoBar)
-	info.infoBar = infoBar
+func newInfoBar(bar *gtk.InfoBar, labelInfoBar *gtk.Label) *infoBar {
+	info := new(infoBar)
+	info.infoBar = bar
 	info.labelInfoBar = labelInfoBar
 	return info
 }
 
-func (i *InfoBar) ShowInfo(text string) {
+func (i *infoBar) showInfo(text string) {
 	i.infoBar.SetMessageType(gtk.MESSAGE_INFO)
 	i.labelInfoBar.SetText(text)
 	i.infoBar.ShowAll()
 }
 
-func (i *InfoBar) ShowInfoWithTimeout(text string, seconds uint) {
+func (i *infoBar) showInfoWithTimeout(text string, seconds uint) {
 	i.infoBar.SetMessageType(gtk.MESSAGE_INFO)
 	i.labelInfoBar.SetText(text)
 	i.infoBar.ShowAll()
 
 	glib.TimeoutSecondsAdd(seconds, func() {
-		i.HideInfoBar()
+		i.hideInfoBar()
 	})
 }
 
-func (i *InfoBar) ShowError(text string) {
+func (i *infoBar) showError(text string) {
 	i.infoBar.SetMessageType(gtk.MESSAGE_ERROR)
 	i.labelInfoBar.SetText(text)
 	i.infoBar.ShowAll()
 }
 
-func (i *InfoBar) HideInfoBar() {
+func (i *infoBar) hideInfoBar() {
 	i.infoBar.Hide()
 }
