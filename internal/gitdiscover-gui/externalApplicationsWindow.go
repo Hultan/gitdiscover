@@ -9,7 +9,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type ExternalApplicationsWindow struct {
+// externalApplicationsWindow represents the window for external applications (like nemo, terminal, etc...)
+type externalApplicationsWindow struct {
 	window  *gtk.Window
 	builder *framework.GtkBuilder
 	config  *gitdiscover.Config
@@ -18,14 +19,15 @@ type ExternalApplicationsWindow struct {
 	refresh func()
 }
 
-func NewExternalApplicationsWindow(logger *logrus.Logger, config *gitdiscover.Config) *ExternalApplicationsWindow {
-	window := new(ExternalApplicationsWindow)
+// newExternalApplicationsWindow creates a new external applications window
+func newExternalApplicationsWindow(logger *logrus.Logger, config *gitdiscover.Config) *externalApplicationsWindow {
+	window := new(externalApplicationsWindow)
 	window.config = config
 	window.logger = logger
 	return window
 }
 
-func (e *ExternalApplicationsWindow) openWindow(refresh func()) {
+func (e *externalApplicationsWindow) openWindow(refresh func()) {
 	// Create a new softBuilder
 	fw := framework.NewFramework()
 	builder, err := fw.Gtk.CreateBuilder("externalApplicationsWindow.ui")
@@ -67,12 +69,12 @@ func (e *ExternalApplicationsWindow) openWindow(refresh func()) {
 	window.ShowAll()
 }
 
-func (e *ExternalApplicationsWindow) closeWindow() {
+func (e *externalApplicationsWindow) closeWindow() {
 	e.window.Hide()
 	e.refresh()
 }
 
-func (e *ExternalApplicationsWindow) fillExternalApplicationsList() {
+func (e *externalApplicationsWindow) fillExternalApplicationsList() {
 	e.clearListBox()
 
 	sgName, _ := gtk.SizeGroupNew(gtk.SIZE_GROUP_BOTH)
@@ -87,7 +89,7 @@ func (e *ExternalApplicationsWindow) fillExternalApplicationsList() {
 	e.listBox.ShowAll()
 }
 
-func (e *ExternalApplicationsWindow) addExternalApplication() {
+func (e *externalApplicationsWindow) addExternalApplication() {
 	dialog := NewExternalApplicationDialog(e.logger, e.config)
 	dialog.mode = externalApplicationModeNew
 	dialog.openDialog(e.window, func() bool {
@@ -104,7 +106,7 @@ func (e *ExternalApplicationsWindow) addExternalApplication() {
 	})
 }
 
-func (e *ExternalApplicationsWindow) removeExternalApplication() {
+func (e *externalApplicationsWindow) removeExternalApplication() {
 	app, index := e.getSelectedApplication()
 	if app == nil {
 		// TODO Please select an application
@@ -116,7 +118,7 @@ func (e *ExternalApplicationsWindow) removeExternalApplication() {
 	e.fillExternalApplicationsList()
 }
 
-func (e *ExternalApplicationsWindow) editExternalApplication() {
+func (e *externalApplicationsWindow) editExternalApplication() {
 	_, index := e.getSelectedApplication()
 	if index == -1 {
 		// TODO Please select an application
@@ -125,7 +127,7 @@ func (e *ExternalApplicationsWindow) editExternalApplication() {
 	e.editExternalApplicationByIndex(index)
 }
 
-func (e *ExternalApplicationsWindow) editExternalApplicationByIndex(index int) {
+func (e *externalApplicationsWindow) editExternalApplicationByIndex(index int) {
 	dialog := NewExternalApplicationDialog(e.logger, e.config)
 	dialog.externalApplication = e.config.ExternalApplications[index]
 	dialog.mode = externalApplicationModeEdit
@@ -140,7 +142,7 @@ func (e *ExternalApplicationsWindow) editExternalApplicationByIndex(index int) {
 	})
 }
 
-func (e *ExternalApplicationsWindow) clearListBox() {
+func (e *externalApplicationsWindow) clearListBox() {
 	children := e.listBox.GetChildren()
 	if children == nil {
 		return
@@ -153,7 +155,7 @@ func (e *ExternalApplicationsWindow) clearListBox() {
 	}
 }
 
-func (e *ExternalApplicationsWindow) createListItem(application gitdiscover.ExternalApplication,
+func (e *externalApplicationsWindow) createListItem(application gitdiscover.ExternalApplication,
 	sgName, sgCommand, sgArgument *gtk.SizeGroup) *gtk.Box {
 
 	box, err := gtk.BoxNew(gtk.ORIENTATION_HORIZONTAL, 10)
@@ -198,7 +200,7 @@ func (e *ExternalApplicationsWindow) createListItem(application gitdiscover.Exte
 	return box
 }
 
-func (e *ExternalApplicationsWindow) getSelectedApplication() (*gitdiscover.ExternalApplication, int) {
+func (e *externalApplicationsWindow) getSelectedApplication() (*gitdiscover.ExternalApplication, int) {
 	row := e.listBox.GetSelectedRow()
 	if row == nil {
 		// TODO : MessageBox "Pleade select an application!"
