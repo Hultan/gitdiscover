@@ -1,6 +1,10 @@
-Shows git status for several directories at once. Can start external applications, and do simple git commands (status, log and diff).
+# GITDISCOVER
 
-Columns:
+Shows git status for several directories at once. Can start external applications, and do simple git commands (status,
+log and diff).
+
+## COLUMNS
+
 * Icon (application.png) from the **assets** folder
 * Modifed date on repository folder
 * Repository path
@@ -8,8 +12,11 @@ Columns:
 * Go version (from go.mod file)
 * Has remote repository
 
+## SCREENSHOT
+
 ![alt text](/assets/gitdiscover.png)
 
-Requires ```gitprompt-go```
+## DESCRIPTION
 
+Requires ```gitprompt-go```
 config.json should be placed in ```~/.config/softteam/gitdiscover/config.json```
