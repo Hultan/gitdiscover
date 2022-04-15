@@ -19,4 +19,5 @@ log and diff).
 ## DESCRIPTION
 
 Requires ```gitprompt-go```
+
 config.json should be placed in ```~/.config/softteam/gitdiscover/config.json```
