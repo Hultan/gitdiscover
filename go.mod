@@ -7,7 +7,7 @@ require (
 	github.com/hultan/gitstatus v1.0.0
 	github.com/hultan/gitstatusprompt v1.0.0
 	github.com/hultan/gomod v1.0.1
-	github.com/hultan/softteam v1.2.6
+	github.com/hultan/softteam v1.2.7
 	github.com/sirupsen/logrus v1.8.1
 	github.com/stretchr/testify v1.7.0
 )
