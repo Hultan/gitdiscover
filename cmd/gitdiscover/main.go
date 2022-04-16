@@ -7,7 +7,7 @@ import (
 	"github.com/gotk3/gotk3/gtk"
 	"github.com/sirupsen/logrus"
 
-	gitConfig "github.com/hultan/gitdiscover/internal/gitdiscover"
+	gitConfig "github.com/hultan/gitdiscover/internal/config"
 	"github.com/hultan/gitdiscover/internal/gitdiscover-gui"
 )
 

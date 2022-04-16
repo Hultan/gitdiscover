@@ -84,14 +84,14 @@ func (m *MainWindow) refreshRepositoryList() {
 	// Clear list
 	m.clearList()
 
-	if m.tracker == nil {
-		m.tracker = gitdiscover.NewTracker(m.config)
+	if m.discover == nil {
+		m.discover = gitdiscover.NewDiscover(m.config)
 	} else {
-		m.tracker.Refresh()
+		m.discover.Refresh()
 	}
 
 	// Sort tracked folders in the order the user have selected
-	m.sortTrackedFolders()
+	m.sortRepositories()
 
 	// Fill list
 	m.fillRepositoryList()
@@ -119,8 +119,8 @@ func (m *MainWindow) addSeparators() {
 func (m *MainWindow) fillRepositoryList() {
 	// Loop through the list of repos and add them to the list
 	sgDate, _ := gtk.SizeGroupNew(gtk.SIZE_GROUP_BOTH)
-	for i := range m.tracker.Folders {
-		repo := m.tracker.Folders[i]
+	for i := range m.discover.Folders {
+		repo := m.discover.Folders[i]
 		listItem := m.createListItem(i, m.config.DateFormat, repo, sgDate)
 		m.repositoryListBox.Add(listItem)
 	}
@@ -129,7 +129,7 @@ func (m *MainWindow) fillRepositoryList() {
 func (m *MainWindow) getGitRepositoryBoundaryIndex() int {
 	// Find where to insert the "Misc folders" separator for non-git repos
 	var index = -1
-	for i, repo := range m.tracker.Folders {
+	for i, repo := range m.discover.Folders {
 		if !repo.IsGit() {
 			index = i
 			break
@@ -138,15 +138,15 @@ func (m *MainWindow) getGitRepositoryBoundaryIndex() int {
 	return index
 }
 
-func (m *MainWindow) sortTrackedFolders() {
+func (m *MainWindow) sortRepositories() {
 	// Sort repos by [Name|ModifiedDate|Changes] and then [IsGit]
 	switch m.sortBy {
 	case sortByName:
-		sort.Sort(gitdiscover.ByName{TrackedFolders: m.tracker.Folders})
+		sort.Sort(gitdiscover.ByName{Repositories: m.discover.Folders})
 	case sortByModifiedDate:
-		sort.Sort(gitdiscover.ByModifiedDate{TrackedFolders: m.tracker.Folders})
+		sort.Sort(gitdiscover.ByModifiedDate{Repositories: m.discover.Folders})
 	case sortByChanges:
-		sort.Sort(gitdiscover.ByChanges{TrackedFolders: m.tracker.Folders})
+		sort.Sort(gitdiscover.ByChanges{Repositories: m.discover.Folders})
 	}
 }
 
@@ -188,7 +188,7 @@ func (m *MainWindow) createListSeparator(text string) *gtk.Box {
 	return box
 }
 
-func (m *MainWindow) createListItem(index int, dateFormat string, repo *gitdiscover.TrackedFolder,
+func (m *MainWindow) createListItem(index int, dateFormat string, repo *gitdiscover.Repository,
 	sgDate *gtk.SizeGroup) *gtk.Box {
 
 	// Create main box

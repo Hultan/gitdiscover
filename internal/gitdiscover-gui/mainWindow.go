@@ -7,6 +7,7 @@ import (
 	"github.com/gotk3/gotk3/gtk"
 	"github.com/sirupsen/logrus"
 
+	"github.com/hultan/gitdiscover/internal/config"
 	"github.com/hultan/gitdiscover/internal/gitdiscover"
 	"github.com/hultan/softteam/framework"
 )
@@ -16,13 +17,13 @@ type MainWindow struct {
 	ApplicationLogPath string
 
 	logger *logrus.Logger
-	config *gitdiscover.Config
+	config *config.Config
 
 	builder           *framework.GtkBuilder
 	window            *gtk.ApplicationWindow
 	repositoryListBox *gtk.ListBox
-	tracker           *gitdiscover.Tracker
-	infoBar           *infoBar
+	discover          *gitdiscover.Discover
+	infoBar           *infoBarHandler
 	toolBar           *gtk.Toolbar
 
 	sortBy             sortByColumnType
@@ -32,7 +33,7 @@ type MainWindow struct {
 }
 
 // NewMainWindow creates a new MainWindow object
-func NewMainWindow(logger *logrus.Logger, config *gitdiscover.Config) *MainWindow {
+func NewMainWindow(logger *logrus.Logger, config *config.Config) *MainWindow {
 	mainWindow := new(MainWindow)
 	mainWindow.logger = logger
 	mainWindow.config = config

@@ -3,7 +3,7 @@ package gitdiscover_gui
 import (
 	"github.com/gotk3/gotk3/gtk"
 
-	"github.com/hultan/gitdiscover/internal/gitdiscover"
+	"github.com/hultan/gitdiscover/internal/config"
 	"github.com/hultan/softteam/framework"
 
 	"github.com/sirupsen/logrus"
@@ -13,14 +13,14 @@ import (
 type externalApplicationsWindow struct {
 	window  *gtk.Window
 	builder *framework.GtkBuilder
-	config  *gitdiscover.Config
+	config  *config.Config
 	logger  *logrus.Logger
 	listBox *gtk.ListBox
 	refresh func()
 }
 
 // newExternalApplicationsWindow creates a new external applications window
-func newExternalApplicationsWindow(logger *logrus.Logger, config *gitdiscover.Config) *externalApplicationsWindow {
+func newExternalApplicationsWindow(logger *logrus.Logger, config *config.Config) *externalApplicationsWindow {
 	window := new(externalApplicationsWindow)
 	window.config = config
 	window.logger = logger
@@ -93,7 +93,7 @@ func (e *externalApplicationsWindow) addExternalApplication() {
 	dialog := newExternalApplicationDialog(e.logger, e.config)
 	dialog.mode = externalApplicationModeNew
 	dialog.openDialog(e.window, func() bool {
-		app := gitdiscover.ExternalApplication{
+		app := config.ExternalApplication{
 			Name:     dialog.externalApplication.Name,
 			Command:  dialog.externalApplication.Command,
 			Argument: dialog.externalApplication.Argument,
@@ -155,7 +155,7 @@ func (e *externalApplicationsWindow) clearListBox() {
 	}
 }
 
-func (e *externalApplicationsWindow) createListItem(application gitdiscover.ExternalApplication,
+func (e *externalApplicationsWindow) createListItem(application config.ExternalApplication,
 	sgName, sgCommand, sgArgument *gtk.SizeGroup) *gtk.Box {
 
 	box, err := gtk.BoxNew(gtk.ORIENTATION_HORIZONTAL, 10)
@@ -200,7 +200,7 @@ func (e *externalApplicationsWindow) createListItem(application gitdiscover.Exte
 	return box
 }
 
-func (e *externalApplicationsWindow) getSelectedApplication() (*gitdiscover.ExternalApplication, int) {
+func (e *externalApplicationsWindow) getSelectedApplication() (*config.ExternalApplication, int) {
 	row := e.listBox.GetSelectedRow()
 	if row == nil {
 		// TODO : MessageBox "Pleade select an application!"

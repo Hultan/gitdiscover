@@ -5,7 +5,7 @@ import (
 
 	"github.com/gotk3/gotk3/gtk"
 
-	"github.com/hultan/gitdiscover/internal/gitdiscover"
+	"github.com/hultan/gitdiscover/internal/config"
 	"github.com/hultan/softteam/framework"
 
 	"github.com/sirupsen/logrus"
@@ -14,21 +14,21 @@ import (
 type externalApplicationDialog struct {
 	window  *gtk.Window
 	builder *framework.GtkBuilder
-	config  *gitdiscover.Config
+	config  *config.Config
 	logger  *logrus.Logger
 
 	nameEntry     *gtk.Entry
 	commandEntry  *gtk.Entry
 	argumentEntry *gtk.Entry
 
-	externalApplication gitdiscover.ExternalApplication
+	externalApplication config.ExternalApplication
 	originalName        string
 	mode                externalApplicationModeType
 
 	saveCallback func() bool
 }
 
-func newExternalApplicationDialog(logger *logrus.Logger, config *gitdiscover.Config) *externalApplicationDialog {
+func newExternalApplicationDialog(logger *logrus.Logger, config *config.Config) *externalApplicationDialog {
 	// TODO : Send in parent object instead (e) of builder, logger and config
 	dialog := new(externalApplicationDialog)
 	dialog.config = config

@@ -13,7 +13,7 @@ type editFolderWindow struct {
 	window         *gtk.Window
 	builder        *framework.GtkBuilder
 	image          *gtk.Image
-	folder         *gitdiscover.TrackedFolder
+	folder         *gitdiscover.Repository
 	folderIconPath *gtk.Entry
 }
 
@@ -23,7 +23,7 @@ func newEditFolderWindow(mainWindow *MainWindow) *editFolderWindow {
 	return edit
 }
 
-func (e *editFolderWindow) openWindow(folder *gitdiscover.TrackedFolder) {
+func (e *editFolderWindow) openWindow(folder *gitdiscover.Repository) {
 	// Create a new softBuilder
 	fw := framework.NewFramework()
 	builder, err := fw.Gtk.CreateBuilder("editFolderWindow.ui")

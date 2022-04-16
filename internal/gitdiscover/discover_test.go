@@ -4,13 +4,15 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	config2 "github.com/hultan/gitdiscover/internal/config"
 )
 
 func TestDiscover_GetRepositories(t *testing.T) {
-	config := NewConfig()
+	config := config2.NewConfig()
 	config.Load()
 
-	discover := NewTracker(config)
+	discover := NewDiscover(config)
 	assert.NotNil(t, discover)
 
 	assert.NotEmpty(t, discover.Folders[4].GitStatus)

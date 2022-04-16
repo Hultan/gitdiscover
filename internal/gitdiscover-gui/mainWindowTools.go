@@ -17,7 +17,7 @@ func (m *MainWindow) getMarkup(text, color string) string {
 	return markup
 }
 
-func (m *MainWindow) getSelectedRepo() *gitdiscover.TrackedFolder {
+func (m *MainWindow) getSelectedRepo() *gitdiscover.Repository {
 	row := m.repositoryListBox.GetSelectedRow()
 	if row == nil {
 		return nil
@@ -46,7 +46,7 @@ func (m *MainWindow) getSelectedRepo() *gitdiscover.TrackedFolder {
 		m.infoBar.showError(err.Error())
 		return nil
 	}
-	repo := m.tracker.Folders[index]
+	repo := m.discover.Folders[index]
 
 	return repo
 }

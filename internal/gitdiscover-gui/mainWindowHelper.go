@@ -9,7 +9,7 @@ func (m *MainWindow) closeMainWindow() {
 	m.window.Close()
 	m.repositoryListBox.Destroy()
 	m.repositoryListBox = nil
-	m.tracker = nil
+	m.discover = nil
 	m.window.Destroy()
 	m.window = nil
 	m.builder = nil

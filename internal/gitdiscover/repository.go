@@ -14,11 +14,12 @@ import (
 	goMod "github.com/hultan/gomod"
 )
 
-// TrackedFolders is a slice of tracked folders.
-type TrackedFolders []*TrackedFolder
+// Repositories is a slice of git folders.
+type Repositories []*Repository
 
-// TrackedFolder represents a tracked git repositry or a standard folder.
-type TrackedFolder struct {
+// Repository represents a git repositry
+// (or occasionally a standard non-git folder).
+type Repository struct {
 	name         string
 	path         string
 	isGit        bool
@@ -30,19 +31,19 @@ type TrackedFolder struct {
 	hasRemote    bool
 }
 
-func newFolder(folder string) *TrackedFolder {
-	f := TrackedFolder{path: strings.Trim(folder, " ")}
+func newFolder(folder string) *Repository {
+	f := Repository{path: strings.Trim(folder, " ")}
 	f.refresh()
 	return &f
 }
 
-// Len makes sure that TrackedFolders implements the Interface interface
-func (f TrackedFolders) Len() int { return len(f) }
+// Len makes sure that Repositories implements the Interface interface
+func (f Repositories) Len() int { return len(f) }
 
-// Swap makes sure that TrackedFolders implements the Interface interface
-func (f TrackedFolders) Swap(i, j int) { f[i], f[j] = f[j], f[i] }
+// Swap makes sure that Repositories implements the Interface interface
+func (f Repositories) Swap(i, j int) { f[i], f[j] = f[j], f[i] }
 
-func (t *TrackedFolder) refresh() {
+func (t *Repository) refresh() {
 	t.name = path.Base(t.path)
 	t.isGit = t.isGitFolder(path.Join(t.path, ".git"))
 	t.modifiedDate = t.getModifiedDate(t.path)
@@ -55,43 +56,43 @@ func (t *TrackedFolder) refresh() {
 }
 
 // Name returns the name of the repository.
-func (t *TrackedFolder) Name() string {
+func (t *Repository) Name() string {
 	return t.name
 }
 
 // Path returns the repository path.
-func (t *TrackedFolder) Path() string {
+func (t *Repository) Path() string {
 	return t.path
 }
 
 // SetPath lets the user change the path to the repository.
-func (t *TrackedFolder) SetPath(newPath string) {
+func (t *Repository) SetPath(newPath string) {
 	t.path = newPath
 	t.refresh()
 }
 
-// ImagePath returns the path to the TrackedFolders image.
-func (t *TrackedFolder) ImagePath() string {
+// ImagePath returns the path to the Repositories image.
+func (t *Repository) ImagePath() string {
 	return t.imagePath
 }
 
-// setImagePath lets the user change the path to the TrackedFolders image.
-func (t *TrackedFolder) setImagePath(newPath string) {
+// setImagePath lets the user change the path to the Repositories image.
+func (t *Repository) setImagePath(newPath string) {
 	t.imagePath = newPath
 }
 
 // GitStatus returns the git status
-func (t *TrackedFolder) GitStatus() string {
+func (t *Repository) GitStatus() string {
 	return t.gitStatus
 }
 
 // GoStatus returns the go status
-func (t *TrackedFolder) GoStatus() string {
+func (t *Repository) GoStatus() string {
 	return t.goStatus
 }
 
 // HasRemote returns true if the repository has a Git remote repository.
-func (t *TrackedFolder) HasRemote() string {
+func (t *Repository) HasRemote() string {
 	if !t.IsGit() {
 		return "                   "
 	}
@@ -103,27 +104,27 @@ func (t *TrackedFolder) HasRemote() string {
 }
 
 // IsGit returns true if the folder points to a Git repository (has a .git folder).
-func (t *TrackedFolder) IsGit() bool {
+func (t *Repository) IsGit() bool {
 	return t.isGit
 }
 
 // ModifiedDate returns the modified date of the folder.
-func (t *TrackedFolder) ModifiedDate() time.Time {
+func (t *Repository) ModifiedDate() time.Time {
 	return t.modifiedDate
 }
 
 // Changes returns the number of changes to the folder.
-func (t *TrackedFolder) Changes() int {
+func (t *Repository) Changes() int {
 	return t.changes
 }
 
-func (t *TrackedFolder) isGitFolder(gitFolder string) bool {
+func (t *Repository) isGitFolder(gitFolder string) bool {
 	_, err := os.Stat(gitFolder)
 	return !os.IsNotExist(err)
 }
 
 // Get the modified date of a file
-func (t *TrackedFolder) getModifiedDate(path string) time.Time {
+func (t *Repository) getModifiedDate(path string) time.Time {
 	info, err := os.Stat(path)
 	if err != nil {
 		return time.Time{}
@@ -132,14 +133,14 @@ func (t *TrackedFolder) getModifiedDate(path string) time.Time {
 }
 
 // Get the git status
-func (t *TrackedFolder) getGitStatus(path string) string {
+func (t *Repository) getGitStatus(path string) string {
 	p := gitStatusPrompt.GitStatusPrompt{}
 	status := p.GetPrompt(path)
 	return status
 }
 
 // Get the go status
-func (t *TrackedFolder) getGoStatus(path string) string {
+func (t *Repository) getGoStatus(path string) string {
 	m := goMod.GoMod{}
 	info := m.GetInfo(path)
 	if info == nil {
@@ -153,7 +154,7 @@ func (t *TrackedFolder) getGoStatus(path string) string {
 	}
 }
 
-func (t *TrackedFolder) getNoOfChanges(path string) int {
+func (t *Repository) getNoOfChanges(path string) int {
 	gs := gitStatus.GitStatus{}
 	status, err := gs.GetStatus(path)
 	if err != nil {
@@ -162,7 +163,7 @@ func (t *TrackedFolder) getNoOfChanges(path string) int {
 	return status.Untracked() + status.Modified() + status.Deleted() + status.Unmerged()
 }
 
-func (t *TrackedFolder) getHasRemote(repoPath string) bool {
+func (t *Repository) getHasRemote(repoPath string) bool {
 	configPath := path.Join(repoPath, ".git", "config")
 	buf, err := ioutil.ReadFile(configPath)
 	if err != nil {

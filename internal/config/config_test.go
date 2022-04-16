@@ -1,4 +1,4 @@
-package gitdiscover
+package config
 
 import (
 	"testing"

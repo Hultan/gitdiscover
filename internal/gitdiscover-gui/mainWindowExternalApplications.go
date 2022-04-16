@@ -9,7 +9,7 @@ import (
 	"github.com/hultan/gitdiscover/internal/gitdiscover"
 )
 
-func (m *MainWindow) openInExternalApplication(name string, repo *gitdiscover.TrackedFolder) {
+func (m *MainWindow) openInExternalApplication(name string, repo *gitdiscover.Repository) {
 	// Find application
 	app := m.config.GetExternalApplicationByName(name)
 	if app == nil {

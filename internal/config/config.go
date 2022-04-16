@@ -1,4 +1,4 @@
-package gitdiscover
+package config
 
 import (
 	"encoding/json"
@@ -10,14 +10,14 @@ import (
 
 // Config : The main config type
 type Config struct {
-	Repositories         []Repository          `json:"repositories"`
+	Repositories         []repository          `json:"repositories"`
 	ExternalApplications []ExternalApplication `json:"external-applications"`
 	DateFormat           string                `json:"date-format"`
 	PathColumnWidth      int                   `json:"path-column-width"`
 }
 
-// Repository : A repository in the config
-type Repository struct {
+// repository : A repository in the config
+type repository struct {
 	Path       string `json:"path"`
 	ImagePath  string `json:"image-path"`
 	IsFavorite bool   `json:"is-favorite"`
@@ -101,7 +101,7 @@ func (config *Config) GetConfigPath() string {
 
 // AddRepository : Adds a new repository to the config
 func (config *Config) AddRepository(path, imagePath string) {
-	repo := Repository{Path: path, ImagePath: imagePath}
+	repo := repository{Path: path, ImagePath: imagePath}
 	config.Repositories = append(config.Repositories, repo)
 }
 
