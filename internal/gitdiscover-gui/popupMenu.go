@@ -80,8 +80,8 @@ func (p *popupMenu) setupEvents() {
 		}
 
 		// Create menu items for external applications
-		for i := 0; i < len(p.mainWindow.config.ExternalApplications); i++ {
-			app := p.mainWindow.config.ExternalApplications[i]
+		for i := 0; i < len(p.mainWindow.discover.ExternalApplications); i++ {
+			app := p.mainWindow.discover.GetExternalApplicationByIndex(i)
 			item, err := gtk.MenuItemNew()
 			if err != nil {
 				p.mainWindow.logger.Error(err)

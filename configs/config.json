@@ -1,0 +1,12 @@
+{
+	"repositories": [
+		{
+			"path": "test",
+			"image-path": "test",
+			"is-favorite": true
+		}
+	],
+	"external-applications": null,
+	"date-format": "2006-01-02, kl. 15:04",
+	"path-column-width": 40
+}

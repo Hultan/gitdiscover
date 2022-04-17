@@ -11,7 +11,7 @@ import (
 
 func (m *MainWindow) openInExternalApplication(name string, repo *gitdiscover.Repository) {
 	// Find application
-	app := m.config.GetExternalApplicationByName(name)
+	app := m.discover.GetExternalApplicationByName(name)
 	if app == nil {
 		// Failed to find application, show info bar.
 		// This should not happen, but if there is an issue
@@ -38,7 +38,7 @@ func (m *MainWindow) openInExternalApplication(name string, repo *gitdiscover.Re
 }
 
 func (m *MainWindow) openExternalToolsDialog() {
-	window := newExternalApplicationsWindow(m.logger, m.config)
+	window := newExternalApplicationsWindow(m)
 	window.openWindow(func() {
 		m.refreshExternalApplications(m.toolBar)
 	})
@@ -53,8 +53,8 @@ func (m *MainWindow) refreshExternalApplications(toolbar *gtk.Toolbar) {
 }
 
 func (m *MainWindow) addToolbarApplications(toolbar *gtk.Toolbar) {
-	for i := 0; i < len(m.config.ExternalApplications); i++ {
-		extApp := m.config.ExternalApplications[i]
+	for i := 0; i < len(m.discover.ExternalApplications); i++ {
+		extApp := m.discover.GetExternalApplicationByIndex(i)
 
 		// Create a new toolbar button, and panic on error.
 		// If we can't create a new button, we have bigger problems.

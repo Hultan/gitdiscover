@@ -3,27 +3,23 @@ package gitdiscover_gui
 import (
 	"github.com/gotk3/gotk3/gtk"
 
-	"github.com/hultan/gitdiscover/internal/config"
+	"github.com/hultan/gitdiscover/internal/gitdiscover"
 	"github.com/hultan/softteam/framework"
-
-	"github.com/sirupsen/logrus"
 )
 
 // externalApplicationsWindow represents the window for external applications (like nemo, terminal, etc...)
 type externalApplicationsWindow struct {
-	window  *gtk.Window
-	builder *framework.GtkBuilder
-	config  *config.Config
-	logger  *logrus.Logger
-	listBox *gtk.ListBox
-	refresh func()
+	window     *gtk.Window
+	builder    *framework.GtkBuilder
+	mainWindow *MainWindow
+	listBox    *gtk.ListBox
+	refresh    func()
 }
 
 // newExternalApplicationsWindow creates a new external applications window
-func newExternalApplicationsWindow(logger *logrus.Logger, config *config.Config) *externalApplicationsWindow {
+func newExternalApplicationsWindow(mainWindow *MainWindow) *externalApplicationsWindow {
 	window := new(externalApplicationsWindow)
-	window.config = config
-	window.logger = logger
+	window.mainWindow = mainWindow
 	return window
 }
 
@@ -81,7 +77,7 @@ func (e *externalApplicationsWindow) fillExternalApplicationsList() {
 	sgCommand, _ := gtk.SizeGroupNew(gtk.SIZE_GROUP_BOTH)
 	sgArgument, _ := gtk.SizeGroupNew(gtk.SIZE_GROUP_BOTH)
 
-	for _, application := range e.config.ExternalApplications {
+	for _, application := range e.mainWindow.discover.ExternalApplications {
 		item := e.createListItem(application, sgName, sgCommand, sgArgument)
 		e.listBox.Add(item)
 	}
@@ -90,17 +86,17 @@ func (e *externalApplicationsWindow) fillExternalApplicationsList() {
 }
 
 func (e *externalApplicationsWindow) addExternalApplication() {
-	dialog := newExternalApplicationDialog(e.logger, e.config)
+	dialog := newExternalApplicationDialog(e.mainWindow)
 	dialog.mode = externalApplicationModeNew
+	dialog.externalApplication = &gitdiscover.ExternalApplication{}
 	dialog.openDialog(e.window, func() bool {
-		app := config.ExternalApplication{
-			Name:     dialog.externalApplication.Name,
-			Command:  dialog.externalApplication.Command,
-			Argument: dialog.externalApplication.Argument,
-		}
-		e.config.ExternalApplications = append(e.config.ExternalApplications, app)
+		e.mainWindow.discover.AddExternalApplication(
+			dialog.externalApplication.Name,
+			dialog.externalApplication.Command,
+			dialog.externalApplication.Argument,
+		)
 		// TODO : Config.Save needs error handling?
-		e.config.Save()
+		e.mainWindow.discover.Save()
 		e.fillExternalApplicationsList()
 		return true
 	})
@@ -113,8 +109,11 @@ func (e *externalApplicationsWindow) removeExternalApplication() {
 		return
 	}
 	// Remove external application from config
-	e.config.ExternalApplications = append(e.config.ExternalApplications[:index], e.config.ExternalApplications[index+1:]...)
-	e.config.Save()
+	e.mainWindow.discover.ExternalApplications = append(
+		e.mainWindow.discover.ExternalApplications[:index],
+		e.mainWindow.discover.ExternalApplications[index+1:]...,
+	)
+	e.mainWindow.discover.Save()
 	e.fillExternalApplicationsList()
 }
 
@@ -128,15 +127,16 @@ func (e *externalApplicationsWindow) editExternalApplication() {
 }
 
 func (e *externalApplicationsWindow) editExternalApplicationByIndex(index int) {
-	dialog := newExternalApplicationDialog(e.logger, e.config)
-	dialog.externalApplication = e.config.ExternalApplications[index]
+	dialog := newExternalApplicationDialog(e.mainWindow)
+	ea := e.mainWindow.discover.GetExternalApplicationByIndex(index)
+	dialog.externalApplication = ea
 	dialog.mode = externalApplicationModeEdit
 	dialog.openDialog(e.window, func() bool {
-		e.config.ExternalApplications[index].Name = dialog.externalApplication.Name
-		e.config.ExternalApplications[index].Command = dialog.externalApplication.Command
-		e.config.ExternalApplications[index].Argument = dialog.externalApplication.Argument
+		ea.Name = dialog.externalApplication.Name
+		ea.Command = dialog.externalApplication.Command
+		ea.Argument = dialog.externalApplication.Argument
 		// TODO : Config.Save needs error handling?
-		e.config.Save()
+		e.mainWindow.discover.Save()
 		e.fillExternalApplicationsList()
 		return true
 	})
@@ -155,19 +155,19 @@ func (e *externalApplicationsWindow) clearListBox() {
 	}
 }
 
-func (e *externalApplicationsWindow) createListItem(application config.ExternalApplication,
+func (e *externalApplicationsWindow) createListItem(application *gitdiscover.ExternalApplication,
 	sgName, sgCommand, sgArgument *gtk.SizeGroup) *gtk.Box {
 
 	box, err := gtk.BoxNew(gtk.ORIENTATION_HORIZONTAL, 10)
 	if err != nil {
-		e.logger.Error(err)
+		e.mainWindow.logger.Error(err)
 		panic(err)
 	}
 
 	// Name
 	labelName, err := gtk.LabelNew("")
 	if err != nil {
-		e.logger.Error(err)
+		e.mainWindow.logger.Error(err)
 		panic(err)
 	}
 	applicationName := `<span font="Sans Regular 10" foreground="#44DD44">` + application.Name + `</span>`
@@ -179,7 +179,7 @@ func (e *externalApplicationsWindow) createListItem(application config.ExternalA
 	// Command
 	labelCommand, err := gtk.LabelNew("")
 	if err != nil {
-		e.logger.Error(err)
+		e.mainWindow.logger.Error(err)
 		panic(err)
 	}
 	labelCommand.SetText(application.Command)
@@ -190,7 +190,7 @@ func (e *externalApplicationsWindow) createListItem(application config.ExternalA
 	// Argument
 	labelArgument, err := gtk.LabelNew("")
 	if err != nil {
-		e.logger.Error(err)
+		e.mainWindow.logger.Error(err)
 		panic(err)
 	}
 	labelArgument.SetText(application.Argument)
@@ -200,7 +200,7 @@ func (e *externalApplicationsWindow) createListItem(application config.ExternalA
 	return box
 }
 
-func (e *externalApplicationsWindow) getSelectedApplication() (*config.ExternalApplication, int) {
+func (e *externalApplicationsWindow) getSelectedApplication() (*gitdiscover.ExternalApplication, int) {
 	row := e.listBox.GetSelectedRow()
 	if row == nil {
 		// TODO : MessageBox "Pleade select an application!"
@@ -213,6 +213,6 @@ func (e *externalApplicationsWindow) getSelectedApplication() (*config.ExternalA
 		return nil, -1
 	}
 
-	app := e.config.ExternalApplications[index]
-	return &app, index
+	app := e.mainWindow.discover.GetExternalApplicationByIndex(index)
+	return app, index
 }

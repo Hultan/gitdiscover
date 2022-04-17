@@ -78,7 +78,7 @@ func (e *editFolderWindow) save() {
 		e.mainWindow.logger.Error(err)
 	} else {
 		e.folder.SetPath(path)
-		e.mainWindow.config.Save()
+		e.mainWindow.discover.Save()
 	}
 	e.closeWindow()
 }

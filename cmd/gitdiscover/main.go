@@ -64,7 +64,7 @@ func startLogging() *logrus.Logger {
 func loadConfig() *gitConfig.Config {
 	config := gitConfig.NewConfig()
 	// Existing config file
-	err := config.Load()
+	err := config.Load("")
 	if err != nil {
 		exitProgram(exitConfigError, err)
 	}

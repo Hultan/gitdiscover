@@ -1,3 +1,3 @@
 package config
 
-const defaultConfigPath = ".config/softteam/gitdiscover/config.json"
+const defaultConfigFile = ".config/softteam/gitdiscover/config.json"

@@ -10,14 +10,14 @@ import (
 
 // Config : The main config type
 type Config struct {
-	Repositories         []repository          `json:"repositories"`
-	ExternalApplications []ExternalApplication `json:"external-applications"`
-	DateFormat           string                `json:"date-format"`
-	PathColumnWidth      int                   `json:"path-column-width"`
+	Repositories         []*Repository          `json:"repositories"`
+	ExternalApplications []*ExternalApplication `json:"external-applications"`
+	DateFormat           string                 `json:"date-format"`
+	PathColumnWidth      int                    `json:"path-column-width"`
 }
 
-// repository : A repository in the config
-type repository struct {
+// Repository : A Repository in the config
+type Repository struct {
 	Path       string `json:"path"`
 	ImagePath  string `json:"image-path"`
 	IsFavorite bool   `json:"is-favorite"`
@@ -30,15 +30,15 @@ type ExternalApplication struct {
 	Argument string `json:"argument"`
 }
 
-// NewConfig : Create a new config readergit diff
+// NewConfig creates a new config
 func NewConfig() *Config {
 	return new(Config)
 }
 
-// Load : Loads the configuration file
-func (config *Config) Load() (err error) {
+// Load loads the configuration file
+func (config *Config) Load(configPath string) (err error) {
 	// Get the path to the config file
-	configPath := config.GetConfigPath()
+	configPath = config.GetConfigPath(configPath)
 
 	// Open config file
 	configFile, err := os.Open(configPath)
@@ -63,10 +63,10 @@ func (config *Config) Load() (err error) {
 	return nil
 }
 
-// Save : Saves a SoftTube configuration file
-func (config *Config) Save() {
+// Save saves a SoftTube configuration file
+func (config *Config) Save(configPath string) {
 	// Get the path to the config file
-	configPath := config.GetConfigPath()
+	configPath = config.GetConfigPath(configPath)
 
 	// Open config file
 	configFile, err := os.OpenFile(configPath, os.O_TRUNC|os.O_WRONLY, 0644)
@@ -92,28 +92,74 @@ func (config *Config) Save() {
 	_ = configFile.Close()
 }
 
-// GetConfigPath : Get path to the config file
-func (config *Config) GetConfigPath() string {
-	home := config.getHomeDirectory()
+// GetConfigPath returns the path to the config file
+func (config *Config) GetConfigPath(configPath string) string {
+	if configPath == "" {
+		configPath = defaultConfigFile
+	}
 
-	return path.Join(home, defaultConfigPath)
+	home := config.getHomeDirectory()
+	return path.Join(home, configPath)
 }
 
-// AddRepository : Adds a new repository to the config
+// ClearRepositories clears the slice of repositories
+func (config *Config) ClearRepositories() {
+	config.Repositories = nil
+}
+
+// AddRepository adds a new repository
 func (config *Config) AddRepository(path, imagePath string) {
-	repo := repository{Path: path, ImagePath: imagePath}
+	repo := &Repository{Path: path, ImagePath: imagePath}
 	config.Repositories = append(config.Repositories, repo)
 }
 
+// RemoveRepository adds a new repository
+func (config *Config) RemoveRepository(path string) {
+	for i := range config.Repositories {
+		if config.Repositories[i].Path == path {
+			config.Repositories = append(config.Repositories[:i], config.Repositories[i+1:]...)
+		}
+	}
+}
+
+// GetExternalApplicationByName gets an external application by name
 func (config *Config) GetExternalApplicationByName(name string) *ExternalApplication {
 	for i := range config.ExternalApplications {
 		ext := config.ExternalApplications[i]
 		if ext.Name == name {
-			return &ext
+			return ext
 		}
 	}
 
 	return nil
+}
+
+// ClearExternalApplications clears the slice of external applications
+func (config *Config) ClearExternalApplications() {
+	config.ExternalApplications = nil
+}
+
+// AddExternalApplication adds an external application
+func (config *Config) AddExternalApplication(name, command, argument string) {
+	a := &ExternalApplication{
+		Name:     name,
+		Command:  command,
+		Argument: argument,
+	}
+
+	config.ExternalApplications = append(config.ExternalApplications, a)
+}
+
+// RemoveExternalApplication adds a new extenal application
+func (config *Config) RemoveExternalApplication(name string) {
+	for i := range config.ExternalApplications {
+		if config.ExternalApplications[i].Name == name {
+			config.ExternalApplications = append(
+				config.ExternalApplications[:i],
+				config.ExternalApplications[i+1:]...,
+			)
+		}
+	}
 }
 
 //

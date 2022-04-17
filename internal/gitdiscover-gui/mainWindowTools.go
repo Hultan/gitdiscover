@@ -46,7 +46,7 @@ func (m *MainWindow) getSelectedRepo() *gitdiscover.Repository {
 		m.infoBar.showError(err.Error())
 		return nil
 	}
-	repo := m.discover.Folders[index]
+	repo := m.discover.Repositories[index]
 
 	return repo
 }
@@ -54,7 +54,7 @@ func (m *MainWindow) getSelectedRepo() *gitdiscover.Repository {
 func (m *MainWindow) openConfig() {
 	// Open the config file in the text editor
 	go func() {
-		m.executeCommand("xed", m.config.GetConfigPath())
+		m.executeCommand("xed", m.discover.GetConfigPath())
 	}()
 }
 

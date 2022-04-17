@@ -39,8 +39,8 @@ func (m *MainWindow) addRepositoryButtonClicked() {
 
 	// Add the new repository, and save the config
 	imagePath := filepath.Join(dialog.GetFilename(), "assets/application.png")
-	m.config.AddRepository(dialog.GetFilename(), imagePath)
-	m.config.Save()
+	m.discover.AddRepository(dialog.GetFilename(), imagePath)
+	m.discover.Save()
 
 	m.refreshRepositoryList()
 }
@@ -68,15 +68,10 @@ func (m *MainWindow) removeRepositoryButtonClicked() {
 
 	// Remove the selected repo
 	trimmedPath := strings.Trim(repo.Path(), " ")
-	for i, repository := range m.config.Repositories {
-		if repository.Path == trimmedPath {
-			m.config.Repositories = append(m.config.Repositories[:i], m.config.Repositories[i+1:]...)
-			break
-		}
-	}
+	m.discover.RemoveRepository(trimmedPath)
 
 	// Save the config
-	m.config.Save()
+	m.discover.Save()
 	m.refreshRepositoryList()
 }
 
@@ -84,11 +79,8 @@ func (m *MainWindow) refreshRepositoryList() {
 	// Clear list
 	m.clearList()
 
-	if m.discover == nil {
-		m.discover = gitdiscover.NewDiscover(m.config)
-	} else {
-		m.discover.Refresh()
-	}
+	// Refresh repository list
+	m.discover.Refresh()
 
 	// Sort tracked folders in the order the user have selected
 	m.sortRepositories()
@@ -119,9 +111,9 @@ func (m *MainWindow) addSeparators() {
 func (m *MainWindow) fillRepositoryList() {
 	// Loop through the list of repos and add them to the list
 	sgDate, _ := gtk.SizeGroupNew(gtk.SIZE_GROUP_BOTH)
-	for i := range m.discover.Folders {
-		repo := m.discover.Folders[i]
-		listItem := m.createListItem(i, m.config.DateFormat, repo, sgDate)
+	for i := range m.discover.Repositories {
+		repo := m.discover.GetRepositoryByIndex(i)
+		listItem := m.createListItem(i, m.discover.GetDateFormat(), repo, sgDate)
 		m.repositoryListBox.Add(listItem)
 	}
 }
@@ -129,7 +121,7 @@ func (m *MainWindow) fillRepositoryList() {
 func (m *MainWindow) getGitRepositoryBoundaryIndex() int {
 	// Find where to insert the "Misc folders" separator for non-git repos
 	var index = -1
-	for i, repo := range m.discover.Folders {
+	for i, repo := range m.discover.Repositories {
 		if !repo.IsGit() {
 			index = i
 			break
@@ -142,11 +134,11 @@ func (m *MainWindow) sortRepositories() {
 	// Sort repos by [Name|ModifiedDate|Changes] and then [IsGit]
 	switch m.sortBy {
 	case sortByName:
-		sort.Sort(gitdiscover.ByName{Repositories: m.discover.Folders})
+		sort.Sort(gitdiscover.ByName{Repositories: m.discover.Repositories})
 	case sortByModifiedDate:
-		sort.Sort(gitdiscover.ByModifiedDate{Repositories: m.discover.Folders})
+		sort.Sort(gitdiscover.ByModifiedDate{Repositories: m.discover.Repositories})
 	case sortByChanges:
-		sort.Sort(gitdiscover.ByChanges{Repositories: m.discover.Folders})
+		sort.Sort(gitdiscover.ByChanges{Repositories: m.discover.Repositories})
 	}
 }
 

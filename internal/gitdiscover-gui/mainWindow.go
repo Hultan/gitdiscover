@@ -16,13 +16,13 @@ import (
 type MainWindow struct {
 	ApplicationLogPath string
 
-	logger *logrus.Logger
-	config *config.Config
+	logger   *logrus.Logger
+	config   *config.Config
+	discover *gitdiscover.Discover
 
 	builder           *framework.GtkBuilder
 	window            *gtk.ApplicationWindow
 	repositoryListBox *gtk.ListBox
-	discover          *gitdiscover.Discover
 	infoBar           *infoBarHandler
 	toolBar           *gtk.Toolbar
 
@@ -60,6 +60,9 @@ func (m *MainWindow) OpenMainWindow(app *gtk.Application) {
 	m.window.SetApplication(app)
 	m.window.SetTitle(fmt.Sprintf("%s - %s", applicationTitle, applicationVersion))
 	_ = m.window.Connect("destroy", m.closeMainWindow)
+
+	// Discover
+	m.discover = gitdiscover.NewDiscover(m.config)
 
 	// Toolbar
 	m.toolBar = m.builder.GetObject("toolbar").(*gtk.Toolbar)
