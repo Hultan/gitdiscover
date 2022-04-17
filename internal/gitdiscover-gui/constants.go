@@ -1,7 +1,7 @@
 package gitdiscover_gui
 
 const (
-	applicationVersion   = "3.8.1"
+	applicationVersion   = "3.9.0"
 	applicationTitle     = "GitDiscover"
 	applicationCopyRight = "©SoftTeam AB, 2021"
 )

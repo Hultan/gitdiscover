@@ -121,6 +121,9 @@ func (p *popupMenu) setupEvents() {
 			return
 		}
 
+		repo.SetIsFavorite(!repo.IsFavorite())
+		p.mainWindow.discover.Save()
+		p.mainWindow.refreshRepositoryList()
 	})
 
 	p.popupGitStatus.Connect("activate", func() {

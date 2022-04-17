@@ -39,7 +39,7 @@ func (m *MainWindow) addRepositoryButtonClicked() {
 
 	// Add the new repository, and save the config
 	imagePath := filepath.Join(dialog.GetFilename(), "assets/application.png")
-	m.discover.AddRepository(dialog.GetFilename(), imagePath)
+	m.discover.AddRepository(dialog.GetFilename(), imagePath, false)
 	m.discover.Save()
 
 	m.refreshRepositoryList()
@@ -97,11 +97,18 @@ func (m *MainWindow) refreshRepositoryList() {
 
 func (m *MainWindow) addSeparators() {
 	// Add git repository separator
-	sepItem := m.createListSeparator("GIT REPOSITORIES")
+	sepItem := m.createListSeparator("FAVORITES")
 	m.repositoryListBox.Insert(sepItem, 0)
 
+	// Add git repository separator
+	index := m.getFavoritesBoundaryIndex()
+	if index != -1 {
+		sepItem = m.createListSeparator("GIT REPOSITORIES")
+		m.repositoryListBox.Insert(sepItem, index+1)
+	}
+
 	// Addd non-git repository separator
-	index := m.getGitRepositoryBoundaryIndex()
+	index = m.getGitRepositoryBoundaryIndex()
 	if index != -1 {
 		sepItem = m.createListSeparator("NON-GIT FOLDERS")
 		m.repositoryListBox.Insert(sepItem, index+1)
@@ -118,8 +125,20 @@ func (m *MainWindow) fillRepositoryList() {
 	}
 }
 
+func (m *MainWindow) getFavoritesBoundaryIndex() int {
+	// Find where to insert the "Git repositores" separator for non-git repos
+	var index = -1
+	for i, repo := range m.discover.Repositories {
+		if !repo.IsFavorite() {
+			index = i
+			break
+		}
+	}
+	return index
+}
+
 func (m *MainWindow) getGitRepositoryBoundaryIndex() int {
-	// Find where to insert the "Misc folders" separator for non-git repos
+	// Find where to insert the "Non-git repositories" separator for non-git repos
 	var index = -1
 	for i, repo := range m.discover.Repositories {
 		if !repo.IsGit() {
@@ -284,6 +303,37 @@ func (m *MainWindow) createListItem(index int, dateFormat string, repo *gitdisco
 	label.SetTooltipText("Repository path")
 	label.SetHAlign(gtk.ALIGN_START)
 	box.PackEnd(label, true, true, 10)
+
+	// Favorite icon
+	if repo.IsFavorite() {
+		iconPath = fw.Resource.GetResourcePath("favorite.png")
+		pix, err = gdk.PixbufNewFromFileAtSize(iconPath, 16, 16)
+		if err != nil {
+			m.logger.Panic(err)
+			panic(err)
+		}
+		image, err = gtk.ImageNewFromPixbuf(pix)
+		image.SetTooltipText("Favorite repo")
+		if err != nil {
+			m.logger.Panic(err)
+			panic(err)
+		}
+	} else {
+		iconPath = fw.Resource.GetResourcePath("favorite.png")
+		pix, err = gdk.PixbufNew(gdk.COLORSPACE_RGB, true, 8, 16, 16)
+		if err != nil {
+			m.logger.Panic(err)
+			panic(err)
+		}
+		pix.Fill(0)
+		image, err = gtk.ImageNewFromPixbuf(pix)
+		image.SetTooltipText("Not a favorite repo")
+		if err != nil {
+			m.logger.Panic(err)
+			panic(err)
+		}
+	}
+	box.PackStart(image, false, false, 10)
 
 	return box
 }

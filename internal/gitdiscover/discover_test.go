@@ -31,14 +31,14 @@ func Test_Save(t *testing.T) {
 	d := NewDiscover(c)
 	d.Refresh()
 	d.AddExternalApplication("name", "command", "argument")
-	d.AddRepository("path", "image-path")
-	d.Save()
+	d.AddRepository("path", "image-path", false)
+	d.Save(testConfigPath)
 	d.Refresh()
 	assert.Equal(t, 1, len(d.ExternalApplications))
 	assert.Equal(t, 2, len(d.Repositories))
 	d.RemoveExternalApplication("name")
 	d.RemoveRepository("path")
-	d.Save()
+	d.Save(testConfigPath)
 }
 
 func getConfig() *config.Config {

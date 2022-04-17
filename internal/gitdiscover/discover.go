@@ -34,6 +34,7 @@ func (d *Discover) Refresh() {
 	for _, configRepo := range d.Config.Repositories {
 		folder := newFolder(configRepo.Path)
 		folder.setImagePath(configRepo.ImagePath)
+		folder.SetIsFavorite(configRepo.IsFavorite)
 
 		repositories = append(repositories, folder)
 	}
@@ -51,11 +52,31 @@ func (d *Discover) Refresh() {
 	d.ExternalApplications = apps
 }
 
+// SaveForTest saves the Discover object to the config file
+// (FOR USE IN TESTS ONLY!!!)
+func (d *Discover) SaveForTest(configPath string) {
+	d.Config.ClearRepositories()
+	for _, repository := range d.Repositories {
+		d.Config.AddRepository(repository.path, repository.imagePath, repository.isFavorite)
+	}
+
+	d.Config.ClearExternalApplications()
+	for _, application := range d.ExternalApplications {
+		d.Config.AddExternalApplication(
+			application.Name,
+			application.Command,
+			application.Argument,
+		)
+	}
+	d.Config.Save(configPath)
+}
+
 // Save saves the Discover object to the config file
+// FOR USE IN PRODUCTION CODE ONLY!!!
 func (d *Discover) Save() {
 	d.Config.ClearRepositories()
 	for _, repository := range d.Repositories {
-		d.Config.AddRepository(repository.path, repository.imagePath)
+		d.Config.AddRepository(repository.path, repository.imagePath, repository.isFavorite)
 	}
 
 	d.Config.ClearExternalApplications()
@@ -76,8 +97,8 @@ func (d *Discover) ClearRepositories() {
 }
 
 // AddRepository adds a new repository
-func (d *Discover) AddRepository(path, imagePath string) {
-	d.Config.AddRepository(path, imagePath)
+func (d *Discover) AddRepository(path, imagePath string, isFavorite bool) {
+	d.Config.AddRepository(path, imagePath, isFavorite)
 	d.Refresh()
 }
 

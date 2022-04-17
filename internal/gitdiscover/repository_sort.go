@@ -5,6 +5,12 @@ type ByName struct{ Repositories }
 
 // Less is a helper function that sorts by their names.
 func (b ByName) Less(i, j int) bool {
+	if b.Repositories[i].IsFavorite() && !b.Repositories[j].IsFavorite() {
+		return true
+	}
+	if b.Repositories[j].IsFavorite() && !b.Repositories[i].IsFavorite() {
+		return false
+	}
 	if b.Repositories[i].IsGit() && !b.Repositories[j].IsGit() {
 		return true
 	}
@@ -19,6 +25,12 @@ type ByModifiedDate struct{ Repositories }
 
 // Less is a helper function that sorts by their names.
 func (b ByModifiedDate) Less(i, j int) bool {
+	if b.Repositories[i].IsFavorite() && !b.Repositories[j].IsFavorite() {
+		return true
+	}
+	if b.Repositories[j].IsFavorite() && !b.Repositories[i].IsFavorite() {
+		return false
+	}
 	if b.Repositories[i].IsGit() && !b.Repositories[j].IsGit() {
 		return true
 	}
@@ -33,6 +45,12 @@ type ByChanges struct{ Repositories }
 
 // Less is a helper function that sorts by their names.
 func (b ByChanges) Less(i, j int) bool {
+	if b.Repositories[i].IsFavorite() && !b.Repositories[j].IsFavorite() {
+		return true
+	}
+	if b.Repositories[j].IsFavorite() && !b.Repositories[i].IsFavorite() {
+		return false
+	}
 	if b.Repositories[i].IsGit() && !b.Repositories[j].IsGit() {
 		return true
 	}

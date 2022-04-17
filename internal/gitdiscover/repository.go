@@ -29,6 +29,7 @@ type Repository struct {
 	goStatus     string
 	changes      int
 	hasRemote    bool
+	isFavorite   bool
 }
 
 func newFolder(folder string) *Repository {
@@ -116,6 +117,16 @@ func (t *Repository) ModifiedDate() time.Time {
 // Changes returns the number of changes to the folder.
 func (t *Repository) Changes() int {
 	return t.changes
+}
+
+// IsFavorite returns the isFavorite flag
+func (t *Repository) IsFavorite() bool {
+	return t.isFavorite
+}
+
+// SetIsFavorite sets the isFavorite flag
+func (t *Repository) SetIsFavorite(value bool) {
+	t.isFavorite = value
 }
 
 func (t *Repository) isGitFolder(gitFolder string) bool {

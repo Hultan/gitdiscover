@@ -56,7 +56,11 @@ func TestConfig_AddRepository(t *testing.T) {
 	_ = config.Load(testConfigPath)
 
 	count := len(config.Repositories)
-	config.AddRepository("/home/per/code/gitdiscover/assets/", "/home/per/code/gitdiscover/assets/application.png")
+	config.AddRepository(
+		"/home/per/code/gitdiscover/assets/",
+		"/home/per/code/gitdiscover/assets/application.png",
+		false,
+	)
 	assert.Equal(t, count+1, len(config.Repositories))
 }
 
@@ -65,7 +69,11 @@ func TestConfig_ClearRepositories(t *testing.T) {
 	_ = config.Load(testConfigPath)
 
 	count := len(config.Repositories)
-	config.AddRepository("/home/per/code/gitdiscover/assets/", "/home/per/code/gitdiscover/assets/application.png")
+	config.AddRepository(
+		"/home/per/code/gitdiscover/assets/",
+		"/home/per/code/gitdiscover/assets/application.png",
+		false,
+	)
 	assert.Equal(t, count+1, len(config.Repositories))
 	config.ClearRepositories()
 	assert.Equal(t, 0, len(config.Repositories))
@@ -76,7 +84,11 @@ func TestConfig_RemoveRepository(t *testing.T) {
 	_ = config.Load(testConfigPath)
 
 	count := len(config.Repositories)
-	config.AddRepository("/home/per/code/gitdiscover/assets/", "/home/per/code/gitdiscover/assets/application.png")
+	config.AddRepository(
+		"/home/per/code/gitdiscover/assets/",
+		"/home/per/code/gitdiscover/assets/application.png",
+		false,
+	)
 	assert.Equal(t, count+1, len(config.Repositories))
 	config.RemoveRepository("/home/per/code/gitdiscover/assets/")
 	assert.Equal(t, 1, len(config.Repositories))

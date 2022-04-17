@@ -108,8 +108,8 @@ func (config *Config) ClearRepositories() {
 }
 
 // AddRepository adds a new repository
-func (config *Config) AddRepository(path, imagePath string) {
-	repo := &Repository{Path: path, ImagePath: imagePath}
+func (config *Config) AddRepository(path, imagePath string, isFavorite bool) {
+	repo := &Repository{Path: path, ImagePath: imagePath, IsFavorite: isFavorite}
 	config.Repositories = append(config.Repositories, repo)
 }
 
