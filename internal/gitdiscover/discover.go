@@ -52,9 +52,9 @@ func (d *Discover) Refresh() {
 	d.ExternalApplications = apps
 }
 
-// SaveForTest saves the Discover object to the config file
+// saveForTest saves the Discover object to the config file
 // (FOR USE IN TESTS ONLY!!!)
-func (d *Discover) SaveForTest(configPath string) {
+func (d *Discover) saveForTest(configPath string) {
 	d.Config.ClearRepositories()
 	for _, repository := range d.Repositories {
 		d.Config.AddRepository(repository.path, repository.imagePath, repository.isFavorite)

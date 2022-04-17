@@ -18,10 +18,10 @@ var (
 func main() {
 	// Logging and config
 	logger = startLogging()
-	config := loadConfig()
+	c := loadConfig()
 
 	logger.Info("Starting GitDiscover GUI!")
-	showGUI(logger, config)
+	showGUI(logger, c)
 }
 
 func exitProgram(exitCode int, err error) {
@@ -62,27 +62,27 @@ func startLogging() *logrus.Logger {
 //
 
 func loadConfig() *gitConfig.Config {
-	config := gitConfig.NewConfig()
+	c := gitConfig.NewConfig()
 	// Existing config file
-	err := config.Load("")
+	err := c.Load("")
 	if err != nil {
 		exitProgram(exitConfigError, err)
 	}
-	return config
+	return c
 }
 
 //
 // GUI functions
 //
 
-func showGUI(logger *logrus.Logger, config *gitConfig.Config) {
+func showGUI(l *logrus.Logger, c *gitConfig.Config) {
 	// Create a new application
 	application, err := gtk.ApplicationNew(applicationId, applicationFlags)
 	if err != nil {
 		exitProgram(exitUnknown, err)
 	}
 
-	mainForm := gitdiscover_gui.NewMainWindow(logger, config)
+	mainForm := gitdiscover_gui.NewMainWindow(l, c)
 	mainForm.ApplicationLogPath = applicationLogPath
 	// Hook up the activate event handler
 	_ = application.Connect("activate", mainForm.OpenMainWindow)

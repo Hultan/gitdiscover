@@ -36,9 +36,9 @@ func NewConfig() *Config {
 }
 
 // Load loads the configuration file
-func (config *Config) Load(configPath string) (err error) {
+func (c *Config) Load(configPath string) (err error) {
 	// Get the path to the config file
-	configPath = config.GetConfigPath(configPath)
+	configPath = c.GetConfigPath(configPath)
 
 	// Open config file
 	configFile, err := os.Open(configPath)
@@ -55,7 +55,7 @@ func (config *Config) Load(configPath string) (err error) {
 
 	// Parse the JSON document
 	jsonParser := json.NewDecoder(configFile)
-	err = jsonParser.Decode(&config)
+	err = jsonParser.Decode(&c)
 	if err != nil {
 		return err
 	}
@@ -64,9 +64,9 @@ func (config *Config) Load(configPath string) (err error) {
 }
 
 // Save saves a SoftTube configuration file
-func (config *Config) Save(configPath string) {
+func (c *Config) Save(configPath string) {
 	// Get the path to the config file
-	configPath = config.GetConfigPath(configPath)
+	configPath = c.GetConfigPath(configPath)
 
 	// Open config file
 	configFile, err := os.OpenFile(configPath, os.O_TRUNC|os.O_WRONLY, 0644)
@@ -78,7 +78,7 @@ func (config *Config) Save(configPath string) {
 	}
 
 	// Create JSON from config object
-	data, err := json.MarshalIndent(config, "", "\t")
+	data, err := json.MarshalIndent(c, "", "\t")
 
 	// Handle errors
 	if err != nil {
@@ -93,39 +93,39 @@ func (config *Config) Save(configPath string) {
 }
 
 // GetConfigPath returns the path to the config file
-func (config *Config) GetConfigPath(configPath string) string {
+func (c *Config) GetConfigPath(configPath string) string {
 	if configPath == "" {
 		configPath = defaultConfigFile
 	}
 
-	home := config.getHomeDirectory()
+	home := c.getHomeDirectory()
 	return path.Join(home, configPath)
 }
 
 // ClearRepositories clears the slice of repositories
-func (config *Config) ClearRepositories() {
-	config.Repositories = nil
+func (c *Config) ClearRepositories() {
+	c.Repositories = nil
 }
 
 // AddRepository adds a new repository
-func (config *Config) AddRepository(path, imagePath string, isFavorite bool) {
+func (c *Config) AddRepository(path, imagePath string, isFavorite bool) {
 	repo := &Repository{Path: path, ImagePath: imagePath, IsFavorite: isFavorite}
-	config.Repositories = append(config.Repositories, repo)
+	c.Repositories = append(c.Repositories, repo)
 }
 
 // RemoveRepository adds a new repository
-func (config *Config) RemoveRepository(path string) {
-	for i := range config.Repositories {
-		if config.Repositories[i].Path == path {
-			config.Repositories = append(config.Repositories[:i], config.Repositories[i+1:]...)
+func (c *Config) RemoveRepository(path string) {
+	for i := range c.Repositories {
+		if c.Repositories[i].Path == path {
+			c.Repositories = append(c.Repositories[:i], c.Repositories[i+1:]...)
 		}
 	}
 }
 
 // GetExternalApplicationByName gets an external application by name
-func (config *Config) GetExternalApplicationByName(name string) *ExternalApplication {
-	for i := range config.ExternalApplications {
-		ext := config.ExternalApplications[i]
+func (c *Config) GetExternalApplicationByName(name string) *ExternalApplication {
+	for i := range c.ExternalApplications {
+		ext := c.ExternalApplications[i]
 		if ext.Name == name {
 			return ext
 		}
@@ -135,28 +135,28 @@ func (config *Config) GetExternalApplicationByName(name string) *ExternalApplica
 }
 
 // ClearExternalApplications clears the slice of external applications
-func (config *Config) ClearExternalApplications() {
-	config.ExternalApplications = nil
+func (c *Config) ClearExternalApplications() {
+	c.ExternalApplications = nil
 }
 
 // AddExternalApplication adds an external application
-func (config *Config) AddExternalApplication(name, command, argument string) {
+func (c *Config) AddExternalApplication(name, command, argument string) {
 	a := &ExternalApplication{
 		Name:     name,
 		Command:  command,
 		Argument: argument,
 	}
 
-	config.ExternalApplications = append(config.ExternalApplications, a)
+	c.ExternalApplications = append(c.ExternalApplications, a)
 }
 
 // RemoveExternalApplication adds a new extenal application
-func (config *Config) RemoveExternalApplication(name string) {
-	for i := range config.ExternalApplications {
-		if config.ExternalApplications[i].Name == name {
-			config.ExternalApplications = append(
-				config.ExternalApplications[:i],
-				config.ExternalApplications[i+1:]...,
+func (c *Config) RemoveExternalApplication(name string) {
+	for i := range c.ExternalApplications {
+		if c.ExternalApplications[i].Name == name {
+			c.ExternalApplications = append(
+				c.ExternalApplications[:i],
+				c.ExternalApplications[i+1:]...,
 			)
 		}
 	}
@@ -167,7 +167,7 @@ func (config *Config) RemoveExternalApplication(name string) {
 //
 
 // Get current users home directory
-func (config *Config) getHomeDirectory() string {
+func (c *Config) getHomeDirectory() string {
 	u, err := user.Current()
 	if err != nil {
 		errorMessage := fmt.Sprintf("Failed to get user home directory : %s", err)
