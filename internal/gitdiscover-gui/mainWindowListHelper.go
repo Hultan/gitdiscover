@@ -14,7 +14,8 @@ import (
 )
 
 // Column :                  Path      Date      GitStatus GoStatus  Yes       No
-var columnColors = []string{"FFFFFF", "8DB38B", "D2AB99", "ADD3AB", "C290AA", "A26690"}
+var columnColors = []string{"8DB38B", "8DB38B", "D2AB99", "8DB38B", "8DB38B", "4D934B"}
+var headerColor = "00002C"
 
 func (m *MainWindow) addRepositoryButtonClicked() {
 	// Create and show the folder chooser dialog
@@ -96,22 +97,30 @@ func (m *MainWindow) refreshRepositoryList() {
 }
 
 func (m *MainWindow) addSeparators() {
-	// Add git repository separator
+	// Add the favorites separator
 	sepItem := m.createListSeparator("FAVORITES")
 	m.repositoryListBox.Insert(sepItem, 0)
 
-	// Add git repository separator
+	// Add favorites header
+	hdrItem := m.createHeaderItem()
+	m.repositoryListBox.Insert(hdrItem, 1)
+
+	// Add git repository separator and header
 	index := m.getFavoritesBoundaryIndex()
 	if index != -1 {
 		sepItem = m.createListSeparator("GIT REPOSITORIES")
-		m.repositoryListBox.Insert(sepItem, index+1)
+		m.repositoryListBox.Insert(sepItem, index+2)
+		hdrItem = m.createHeaderItem()
+		m.repositoryListBox.Insert(hdrItem, index+3)
 	}
 
-	// Addd non-git repository separator
+	// Addd non-git repository separator and header
 	index = m.getGitRepositoryBoundaryIndex()
 	if index != -1 {
 		sepItem = m.createListSeparator("NON-GIT FOLDERS")
-		m.repositoryListBox.Insert(sepItem, index+1)
+		m.repositoryListBox.Insert(sepItem, index+4)
+		hdrItem = m.createHeaderItem()
+		m.repositoryListBox.Insert(hdrItem, index+5)
 	}
 }
 
@@ -193,8 +202,96 @@ func (m *MainWindow) createListSeparator(text string) *gtk.Box {
 		m.logger.Panic(err)
 		panic(err)
 	}
-	label.SetMarkup(`<span font="Sans Regular 14" foreground="#DDDD00">` + text + `</span>`)
+	label.SetMarkup(`<span font="Sans Regular 14" foreground="#8C8C00">` + text + `</span>`)
 	box.PackStart(label, true, true, 10)
+
+	return box
+}
+
+func (m *MainWindow) createHeaderItem() *gtk.Box {
+	// Create main box
+	box, err := gtk.BoxNew(gtk.ORIENTATION_HORIZONTAL, 10)
+	if err != nil {
+		m.logger.Panic(err)
+		panic(err)
+	}
+
+	// Icon
+	label, err := gtk.LabelNew("")
+	if err != nil {
+		m.logger.Panic(err)
+		panic(err)
+	}
+	label.SetMarkup(m.getMarkup("Icon", headerColor))
+	label.SetName("hdrIcon")
+	label.SetTooltipText("Repository icon")
+	box.PackStart(label, false, false, 5)
+
+	// Date
+	label, err = gtk.LabelNew("")
+	if err != nil {
+		m.logger.Panic(err)
+		panic(err)
+	}
+	label.SetMarkup(m.getMarkup("Date                       ", headerColor))
+	label.SetName("hdrDate")
+	label.SetTooltipText("Modified date of the git repository folder")
+	box.PackStart(label, false, false, 10)
+
+	// Favorite icon
+	label, err = gtk.LabelNew("Favorite")
+	if err != nil {
+		m.logger.Panic(err)
+		panic(err)
+	}
+	label.SetMarkup(m.getMarkup("Favorite", headerColor))
+	label.SetName("hdrFavorite")
+	label.SetTooltipText("Is the repository marked as a user favorite?")
+	box.PackStart(label, false, false, 0)
+
+	// Path
+	label, err = gtk.LabelNew("")
+	if err != nil {
+		m.logger.Panic(err)
+		panic(err)
+	}
+	label.SetMarkup(m.getMarkup("Path", headerColor))
+	label.SetName("hdrPath")
+	label.SetTooltipText("Repository path")
+	box.PackStart(label, false, false, 10)
+
+	// HasRemote
+	label, err = gtk.LabelNew("")
+	if err != nil {
+		m.logger.Panic(err)
+		panic(err)
+	}
+	label.SetMarkup(m.getMarkup("Remote", headerColor))
+	label.SetName("hdrHasRemote")
+	label.SetTooltipText("Does the repository have a remote repository?")
+	box.PackEnd(label, false, false, 0)
+
+	// GoStatus
+	label, err = gtk.LabelNew("")
+	if err != nil {
+		m.logger.Panic(err)
+		panic(err)
+	}
+	label.SetMarkup(m.getMarkup("Go status", headerColor))
+	label.SetName("hdrGoStatus")
+	label.SetTooltipText("The go version set in the go.mod file")
+	box.PackEnd(label, false, false, 2)
+
+	// GitStatus
+	label, err = gtk.LabelNew("")
+	if err != nil {
+		m.logger.Panic(err)
+		panic(err)
+	}
+	label.SetMarkup(m.getMarkup("Git status  ", headerColor))
+	label.SetName("hdrGitStatus")
+	label.SetTooltipText("The branch and the status of the git branch (modified,added, deleted, etc...)")
+	box.PackEnd(label, false, false, 10)
 
 	return box
 }
@@ -255,10 +352,8 @@ func (m *MainWindow) createListItem(index int, dateFormat string, repo *gitdisco
 	}
 	if strings.Trim(repo.HasRemote(), " ") == "yes" {
 		label.SetMarkup(m.getMarkup(repo.HasRemote(), columnColors[4]))
-		// label.SetMarkup(`<span font="Sans Regular 10" foreground="#44DD44">` + repo.HasRemote() + `</span>`)
 	} else {
 		label.SetMarkup(m.getMarkup(repo.HasRemote(), columnColors[5]))
-		// label.SetMarkup(`<span font="Sans Regular 10" foreground="#DD4444">` + repo.HasRemote() + `</span>`)
 	}
 
 	label.SetName("lblHasRemote")

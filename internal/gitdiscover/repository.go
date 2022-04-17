@@ -95,13 +95,13 @@ func (t *Repository) GoStatus() string {
 // HasRemote returns true if the repository has a Git remote repository.
 func (t *Repository) HasRemote() string {
 	if !t.IsGit() {
-		return "                   "
+		return " no "
 	}
 	if t.hasRemote {
-		return "has remote"
+		return "yes"
 	}
 
-	return "                   "
+	return " no "
 }
 
 // IsGit returns true if the folder points to a Git repository (has a .git folder).
