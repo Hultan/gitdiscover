@@ -102,7 +102,7 @@ func (m *MainWindow) addSeparators() {
 	m.repositoryListBox.Insert(sepItem, 0)
 
 	// Add favorites header
-	hdrItem := m.createHeaderItem()
+	hdrItem := m.createHeader()
 	m.repositoryListBox.Insert(hdrItem, 1)
 
 	// Add git repository separator and header
@@ -110,7 +110,7 @@ func (m *MainWindow) addSeparators() {
 	if index != -1 {
 		sepItem = m.createListSeparator("GIT REPOSITORIES")
 		m.repositoryListBox.Insert(sepItem, index+2)
-		hdrItem = m.createHeaderItem()
+		hdrItem = m.createHeader()
 		m.repositoryListBox.Insert(hdrItem, index+3)
 	}
 
@@ -119,7 +119,7 @@ func (m *MainWindow) addSeparators() {
 	if index != -1 {
 		sepItem = m.createListSeparator("NON-GIT FOLDERS")
 		m.repositoryListBox.Insert(sepItem, index+4)
-		hdrItem = m.createHeaderItem()
+		hdrItem = m.createHeader()
 		m.repositoryListBox.Insert(hdrItem, index+5)
 	}
 }
@@ -208,7 +208,20 @@ func (m *MainWindow) createListSeparator(text string) *gtk.Box {
 	return box
 }
 
-func (m *MainWindow) createHeaderItem() *gtk.Box {
+func (m *MainWindow) createHeaderItem(name, text, tooltip string) *gtk.Label {
+	label, err := gtk.LabelNew("")
+	if err != nil {
+		m.logger.Panic(err)
+		panic(err)
+	}
+	label.SetMarkup(m.getMarkup(text, headerColor))
+	label.SetName(name)
+	label.SetTooltipText(tooltip)
+
+	return label
+}
+
+func (m *MainWindow) createHeader() *gtk.Box {
 	// Create main box
 	box, err := gtk.BoxNew(gtk.ORIENTATION_HORIZONTAL, 10)
 	if err != nil {
@@ -216,82 +229,64 @@ func (m *MainWindow) createHeaderItem() *gtk.Box {
 		panic(err)
 	}
 
+	// TODO : create a createHeaderItem function taking arguments
+	// text, name and tooltip
+
 	// Icon
-	label, err := gtk.LabelNew("")
-	if err != nil {
-		m.logger.Panic(err)
-		panic(err)
-	}
-	label.SetMarkup(m.getMarkup("Icon", headerColor))
-	label.SetName("hdrIcon")
-	label.SetTooltipText("Repository icon")
+	label := m.createHeaderItem(
+		"hdrIcon",
+		"Icon",
+		"Repository icon, should be called application.png in the assets folder.",
+	)
 	box.PackStart(label, false, false, 5)
 
 	// Date
-	label, err = gtk.LabelNew("")
-	if err != nil {
-		m.logger.Panic(err)
-		panic(err)
-	}
-	label.SetMarkup(m.getMarkup("Date                       ", headerColor))
-	label.SetName("hdrDate")
-	label.SetTooltipText("Modified date of the git repository folder")
+	label = m.createHeaderItem(
+		"hdrDate",
+		"Date                       ",
+		"Modified date of the git repository folder.",
+	)
 	box.PackStart(label, false, false, 10)
 
 	// Favorite icon
-	label, err = gtk.LabelNew("Favorite")
-	if err != nil {
-		m.logger.Panic(err)
-		panic(err)
-	}
-	label.SetMarkup(m.getMarkup("Favorite", headerColor))
-	label.SetName("hdrFavorite")
-	label.SetTooltipText("Is the repository marked as a user favorite?")
+	label = m.createHeaderItem(
+		"hdrFavorite",
+		"Favorite",
+		"Is the repository marked as a user favorite?",
+	)
 	box.PackStart(label, false, false, 0)
 
 	// Path
-	label, err = gtk.LabelNew("")
-	if err != nil {
-		m.logger.Panic(err)
-		panic(err)
-	}
-	label.SetMarkup(m.getMarkup("Path", headerColor))
-	label.SetName("hdrPath")
-	label.SetTooltipText("Repository path")
+	label = m.createHeaderItem(
+		"hdrPath",
+		"Path",
+		"Repository path",
+	)
 	box.PackStart(label, false, false, 10)
 
 	// HasRemote
-	label, err = gtk.LabelNew("")
-	if err != nil {
-		m.logger.Panic(err)
-		panic(err)
-	}
-	label.SetMarkup(m.getMarkup("Remote", headerColor))
-	label.SetName("hdrHasRemote")
-	label.SetTooltipText("Does the repository have a remote repository?")
+	label = m.createHeaderItem(
+		"hdrHasRemote",
+		"Remote",
+		"Does the repository have a remote repository?",
+	)
 	box.PackEnd(label, false, false, 0)
 
 	// GoStatus
-	label, err = gtk.LabelNew("")
-	if err != nil {
-		m.logger.Panic(err)
-		panic(err)
-	}
-	label.SetMarkup(m.getMarkup("Go status", headerColor))
-	label.SetName("hdrGoStatus")
-	label.SetTooltipText("The go version set in the go.mod file")
+	label = m.createHeaderItem(
+		"hdrGoStatus",
+		"Go status",
+		"The go version set in the go.mod file.",
+	)
 	box.PackEnd(label, false, false, 2)
 
 	// GitStatus
-	label, err = gtk.LabelNew("")
-	if err != nil {
-		m.logger.Panic(err)
-		panic(err)
-	}
-	label.SetMarkup(m.getMarkup("Git status  ", headerColor))
-	label.SetName("hdrGitStatus")
-	label.SetTooltipText("The branch and the status of the git branch (modified,added, deleted, etc...)")
-	box.PackEnd(label, false, false, 10)
+	label = m.createHeaderItem(
+		"hdrGitStatus",
+		"Git status",
+		"The branch and the status of the git branch (modified,added, deleted, etc...).",
+	)
+	box.PackEnd(label, false, false, 15)
 
 	return box
 }
@@ -324,7 +319,7 @@ func (m *MainWindow) createListItem(index int, dateFormat string, repo *gitdisco
 		panic(err)
 	}
 	image, err := gtk.ImageNewFromPixbuf(pix)
-	image.SetTooltipText("Application.png from assets folder in repository")
+	image.SetTooltipText("Repository icon, should be called application.png in the assets folder.")
 	if err != nil {
 		m.logger.Panic(err)
 		panic(err)
@@ -339,7 +334,7 @@ func (m *MainWindow) createListItem(index int, dateFormat string, repo *gitdisco
 	}
 	label.SetMarkup(m.getMarkup(repo.ModifiedDate().Format(dateFormat), columnColors[1]))
 	label.SetName("lblDate")
-	label.SetTooltipText("Modifed date of repository folder")
+	label.SetTooltipText("Modified date of the git repository folder.")
 	sgDate.AddWidget(label)
 	label.SetXAlign(0.0)
 	box.PackStart(label, false, false, 10)
@@ -357,7 +352,7 @@ func (m *MainWindow) createListItem(index int, dateFormat string, repo *gitdisco
 	}
 
 	label.SetName("lblHasRemote")
-	label.SetTooltipText("Has a Git remote repository")
+	label.SetTooltipText("Does the repository have a remote repository?")
 	label.SetHAlign(gtk.ALIGN_START)
 	box.PackEnd(label, false, false, 10)
 
@@ -370,7 +365,7 @@ func (m *MainWindow) createListItem(index int, dateFormat string, repo *gitdisco
 	// label.SetMarkup(`<span font="Sans Regular 10" foreground="#6666DD">` + repo.GoStatus() + `</span>`)
 	label.SetMarkup(m.getMarkup(repo.GoStatus(), columnColors[3]))
 	label.SetName("lblGoStatus")
-	label.SetTooltipText("Go version from the go.mod file")
+	label.SetTooltipText("The go version set in the go.mod file.")
 	label.SetHAlign(gtk.ALIGN_START)
 	box.PackEnd(label, false, false, 10)
 
@@ -383,7 +378,7 @@ func (m *MainWindow) createListItem(index int, dateFormat string, repo *gitdisco
 	// label.SetMarkup(`<span font="Sans Regular 10" foreground="#22BB88">` + repo.GitStatus() + `</span>`)
 	label.SetMarkup(m.getMarkup(repo.GitStatus(), columnColors[2]))
 	label.SetName("lblStatus")
-	label.SetTooltipText("Result from the Git status command")
+	label.SetTooltipText("The branch and the status of the git branch (modified,added, deleted, etc...).")
 	label.SetHAlign(gtk.ALIGN_START)
 	box.PackEnd(label, false, false, 10)
 
@@ -408,7 +403,7 @@ func (m *MainWindow) createListItem(index int, dateFormat string, repo *gitdisco
 			panic(err)
 		}
 		image, err = gtk.ImageNewFromPixbuf(pix)
-		image.SetTooltipText("Favorite repo")
+		image.SetTooltipText("Is the repository marked as a user favorite?")
 		if err != nil {
 			m.logger.Panic(err)
 			panic(err)
@@ -422,7 +417,7 @@ func (m *MainWindow) createListItem(index int, dateFormat string, repo *gitdisco
 		}
 		pix.Fill(0)
 		image, err = gtk.ImageNewFromPixbuf(pix)
-		image.SetTooltipText("Not a favorite repo")
+		image.SetTooltipText("Is the repository marked as a user favorite?")
 		if err != nil {
 			m.logger.Panic(err)
 			panic(err)
