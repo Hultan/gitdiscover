@@ -25,7 +25,6 @@ func newEditFolderWindow(mainWindow *MainWindow) *editFolderWindow {
 
 func (e *editFolderWindow) openWindow(folder *gitdiscover.Repository) {
 	// Create a new softBuilder
-	fw := framework.NewFramework()
 	builder, err := fw.Gtk.CreateBuilder("editFolderWindow.ui")
 	if err != nil {
 		panic(err)
@@ -93,7 +92,6 @@ func (e *editFolderWindow) tryLoadIcon(path string) {
 	if err != nil {
 		e.mainWindow.logger.Error(err)
 		var iconPath = ""
-		fw := framework.NewFramework()
 		if e.folder.IsGit() {
 			iconPath = fw.Resource.GetResourcePath("gitFolder.png")
 		} else {

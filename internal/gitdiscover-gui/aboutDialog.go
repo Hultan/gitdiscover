@@ -3,8 +3,6 @@ package gitdiscover_gui
 import (
 	"github.com/gotk3/gotk3/gtk"
 	"github.com/sirupsen/logrus"
-
-	"github.com/hultan/softteam/framework"
 )
 
 type aboutDialog struct {
@@ -23,7 +21,6 @@ func newAboutDialog(logger *logrus.Logger, parent *gtk.ApplicationWindow) *about
 func (m *aboutDialog) openAboutDialog() {
 	if m.dialog == nil {
 		// Create a new softBuilder
-		fw := framework.NewFramework()
 		builder, err := fw.Gtk.CreateBuilder("about.ui")
 		if err != nil {
 			panic(err)

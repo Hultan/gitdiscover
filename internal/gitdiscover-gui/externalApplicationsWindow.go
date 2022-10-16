@@ -25,7 +25,6 @@ func newExternalApplicationsWindow(mainWindow *MainWindow) *externalApplications
 
 func (e *externalApplicationsWindow) openWindow(refresh func()) {
 	// Create a new softBuilder
-	fw := framework.NewFramework()
 	builder, err := fw.Gtk.CreateBuilder("externalApplicationsWindow.ui")
 	if err != nil {
 		panic(err)

@@ -12,6 +12,8 @@ import (
 	"github.com/hultan/softteam/framework"
 )
 
+var fw *framework.Framework
+
 // MainWindow is the main window
 type MainWindow struct {
 	ApplicationLogPath string
@@ -37,6 +39,8 @@ func NewMainWindow(logger *logrus.Logger, config *config.Config) *MainWindow {
 	mainWindow := new(MainWindow)
 	mainWindow.logger = logger
 	mainWindow.config = config
+	fw = framework.NewFramework()
+
 	return mainWindow
 }
 
@@ -46,7 +50,6 @@ func (m *MainWindow) OpenMainWindow(app *gtk.Application) {
 	gtk.Init(&os.Args)
 
 	// Create a new softBuilder
-	fw := framework.NewFramework()
 	builder, err := fw.Gtk.CreateBuilder("mainWindow.ui")
 	if err != nil {
 		panic(err)

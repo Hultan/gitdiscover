@@ -6,8 +6,6 @@ import (
 
 	"github.com/gotk3/gotk3/gdk"
 	"github.com/gotk3/gotk3/gtk"
-
-	"github.com/hultan/softteam/framework"
 )
 
 type popupMenu struct {
@@ -33,7 +31,6 @@ func newPopupMenu(window *MainWindow) *popupMenu {
 
 func (p *popupMenu) setupPopupMenu() {
 	// Create a new softBuilder
-	fw := framework.NewFramework()
 	builder, err := fw.Gtk.CreateBuilder("mainWindow.ui")
 	if err != nil {
 		panic(err)

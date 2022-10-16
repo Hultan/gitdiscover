@@ -10,7 +10,6 @@ import (
 	"github.com/gotk3/gotk3/gtk"
 
 	"github.com/hultan/gitdiscover/internal/gitdiscover"
-	"github.com/hultan/softteam/framework"
 )
 
 // Column :                  Path      Date      GitStatus GoStatus  Yes       No
@@ -303,7 +302,6 @@ func (m *MainWindow) createListItem(index int, dateFormat string, repo *gitdisco
 	box.SetName(fmt.Sprintf("box_%v", index))
 
 	// Icon
-	fw := framework.NewFramework()
 	iconPath := repo.ImagePath()
 	if !fw.IO.FileExists(iconPath) {
 		// General icon for project that don't have one

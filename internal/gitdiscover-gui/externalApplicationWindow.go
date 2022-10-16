@@ -37,7 +37,6 @@ func newExternalApplicationDialog(mainWindow *MainWindow) *externalApplicationDi
 
 func (e *externalApplicationDialog) openDialog(parent *gtk.Window, saveCallback func() bool) {
 	// Create a new softBuilder
-	fw := framework.NewFramework()
 	builder, err := fw.Gtk.CreateBuilder("externalApplicationWindow.ui")
 	if err != nil {
 		panic(err)

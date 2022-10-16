@@ -25,7 +25,6 @@ func newOutputWindow(builder *framework.GtkBuilder, logger *logrus.Logger) *outp
 
 func (o *outputWindow) openWindow(header, text string, gitCommand gitCommandType) {
 	// Create a new softBuilder
-	fw := framework.NewFramework()
 	builder, err := fw.Gtk.CreateBuilder("outputWindow.ui")
 	if err != nil {
 		panic(err)

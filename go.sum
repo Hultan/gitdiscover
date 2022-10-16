@@ -9,8 +9,6 @@ github.com/hultan/gitstatusprompt v1.0.0 h1:EFgoKJfZz5u2NJc+s7i1X4OTrisMsHZyVPMN
 github.com/hultan/gitstatusprompt v1.0.0/go.mod h1:rnHtpNHgsoMV2i88/ZRSS0hwYAXYF+MbXbylHwWa/Nw=
 github.com/hultan/gomod v1.0.1 h1:9eLtKcZQ0MyvWs65gjhDXwRG33VJViG79SKS9DGLgOM=
 github.com/hultan/gomod v1.0.1/go.mod h1:YkfKc/bmjqBEpR/lbcZBFg/olVoDOQm6GPcA/d/1CkM=
-github.com/hultan/softteam v1.2.6 h1:qScP582xAoe+9/CL2PlMMA7eA3elGht5iHMlDeetWr8=
-github.com/hultan/softteam v1.2.6/go.mod h1:nQlNmvyd/tuyrV5lucalOSTJfCJMQuGWmD71OolFTYw=
 github.com/hultan/softteam v1.2.7 h1:iPPHTcO3038WUAtHeo+3g2lXiTErYkZOpyLOgEEIYK0=
 github.com/hultan/softteam v1.2.7/go.mod h1:nQlNmvyd/tuyrV5lucalOSTJfCJMQuGWmD71OolFTYw=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
